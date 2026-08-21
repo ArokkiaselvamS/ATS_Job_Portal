@@ -32,12 +32,12 @@ a {
 }
 
 .hero-title {
-  letter-spacing: -0.055em;
-  line-height: 1.02;
+  letter-spacing: -0.04em;
+  line-height: 1.04;
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #4433ee 0%, #7c3aed 42%, #f36b28 100%);
+  background: linear-gradient(90deg, #3B28EC 0%, #6335F3 45%, #F25C05 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -45,20 +45,20 @@ a {
 
 .hero-grid {
   background-image:
-    radial-gradient(circle at 78% 18%, rgba(98, 84, 238, 0.09), transparent 18rem),
-    radial-gradient(circle at 22% 80%, rgba(243, 107, 40, 0.06), transparent 18rem);
+    radial-gradient(circle at 82% 15%, rgba(59, 40, 236, 0.07), transparent 22rem),
+    radial-gradient(circle at 18% 85%, rgba(242, 92, 5, 0.05), transparent 22rem);
 }
 
 .image-frame {
-  clip-path: polygon(9% 0, 94% 0, 100% 10%, 100% 90%, 94% 100%, 8% 100%, 0 88%, 0 14%);
+  clip-path: polygon(7% 0, 100% 0, 100% 93%, 93% 100%, 0 100%, 0 7%);
 }
 
 @media (max-width: 767px) {
   .hero-title {
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
   }
 
   .image-frame {
-    clip-path: none;
+    clip-path: polygon(4% 0, 100% 0, 100% 96%, 96% 100%, 0 100%, 0 4%);
   }
 }
