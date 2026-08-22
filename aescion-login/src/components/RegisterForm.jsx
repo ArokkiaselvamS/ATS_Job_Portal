@@ -89,7 +89,7 @@ function validate(values, t) {
   return errors
 }
 
-export default function RegisterForm({ language, onLanguageChange, onSwitchToLogin, onNotify }) {
+export default function RegisterForm({ language, onLanguageChange, onSwitchToLogin, onNotify, onRegisterSuccess }) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -124,7 +124,7 @@ export default function RegisterForm({ language, onLanguageChange, onSwitchToLog
     window.localStorage.setItem(REMEMBER_KEY, String(next))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const validationErrors = validate(values, t)
     setErrors(validationErrors)
@@ -135,12 +135,37 @@ export default function RegisterForm({ language, onLanguageChange, onSwitchToLog
       return
     }
 
+    const nameParts = values.fullName.trim().split(/\s+/)
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || firstName
+
     setSubmitting(true)
-    setTimeout(() => {
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+      const res = await fetch(`${apiBase}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: values.identifier,
+          password: values.password,
+          phone: values.mobile,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onNotify(`Account created successfully for ${firstName}!`, 'success')
+        if (onRegisterSuccess) onRegisterSuccess(data.data)
+      } else {
+        onNotify(data.message || 'Registration failed.', 'error')
+      }
+    } catch {
+      onNotify('Unable to connect to the server.', 'error')
+    } finally {
       setSubmitting(false)
-      onNotify(`Account created successfully for ${values.fullName.split(' ')[0]}!`, 'success')
-      setTimeout(() => onSwitchToLogin(), 1000)
-    }, 1200)
+    }
   }
 
   return (

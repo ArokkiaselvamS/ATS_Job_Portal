@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int           @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String        @unique
+  passwordHash    String
+  phone           String?
+  role            Role          @default(JOB_SEEKER)
+  profileImage    String?
+  isEmailVerified Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  lastLoginAt     DateTime?
+
+  profile         Profile?
+  applications    Application[]
+  savedJobs       SavedJob[]
+}
+
+model Profile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  user         User     @relation(fields: [userId], references: [id])
+  headline     String?
+  bio          String?
+  location     String?
+  city         String?
+  state        String?
+  country      String?
+  dateOfBirth  DateTime?
+  gender       String?
+  website      String?
+  linkedinUrl  String?
+  githubUrl    String?
+  portfolioUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String
+  logo        String?
+  description String?
+  website     String?
+  industry    String?
+  companySize String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  jobs        Job[]
+}
+
+model Job {
+  id              Int           @id @default(autoincrement())
+  title           String
+  description     String
+  companyId       Int
+  company         Company       @relation(fields: [companyId], references: [id])
+  location        String?
+  jobType         JobType
+  workMode        WorkMode
+  experienceLevel String?
+  salaryMin       Float?
+  salaryMax       Float?
+  salaryCurrency  String?       @default("USD")
+  skills          String[]
+  status          JobStatus     @default(ACTIVE)
+  postedAt        DateTime      @default(now())
+  closingDate     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  applications    Application[]
+  savedJobs       SavedJob[]
+}
+
+model Application {
+  id             Int               @id @default(autoincrement())
+  userId         Int
+  user           User              @relation(fields: [userId], references: [id])
+  jobId          Int
+  job            Job               @relation(fields: [jobId], references: [id])
+  status         ApplicationStatus @default(APPLIED)
+  appliedAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  notes          String?
+  resumeUrl      String?
+  coverLetterUrl String?
+  createdAt      DateTime          @default(now())
+}
+
+model SavedJob {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  jobId     Int
+  job       Job      @relation(fields: [jobId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+}
+
+enum Role {
+  JOB_SEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum WorkMode {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum JobStatus {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}

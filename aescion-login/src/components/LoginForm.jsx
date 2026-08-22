@@ -71,7 +71,7 @@ function validate(values, t) {
   return errors
 }
 
-export default function LoginForm({ language, onLanguageChange, onOpenForgotPassword, onSwitchToRegister, onNotify }) {
+export default function LoginForm({ language, onLanguageChange, onOpenForgotPassword, onSwitchToRegister, onNotify, onLoginSuccess }) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -106,7 +106,7 @@ export default function LoginForm({ language, onLanguageChange, onOpenForgotPass
     window.localStorage.setItem(REMEMBER_KEY, String(next))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const validationErrors = validate(values, t)
     setErrors(validationErrors)
@@ -118,10 +118,29 @@ export default function LoginForm({ language, onLanguageChange, onOpenForgotPass
     }
 
     setSubmitting(true)
-    setTimeout(() => {
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+      const res = await fetch(`${apiBase}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: values.identifier,
+          password: values.password,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onNotify(`Welcome back, ${data.data.firstName}!`, 'success')
+        if (onLoginSuccess) onLoginSuccess(data.data)
+      } else {
+        onNotify(data.message || 'Invalid email or password.', 'error')
+      }
+    } catch {
+      onNotify('Unable to connect to the server.', 'error')
+    } finally {
       setSubmitting(false)
-      onNotify(`Welcome back, ${values.identifier.split('@')[0]}!`, 'success')
-    }, 1200)
+    }
   }
 
   return (
