@@ -4,7 +4,8 @@ import ApplicationTracker from "./pages/ApplicationTracker";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import Employers from "./pages/Employers";
 import Blog from "./pages/Blog";
-import AuthPage from "./pages/AuthPage";
+import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
 
 export default function App() {
   return (
@@ -15,8 +16,8 @@ export default function App() {
       <Route path="/employers" element={<Employers />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/jobs" element={<Home />} />
-      <Route path="/auth/login" element={<AuthPage />} />
-      <Route path="/auth/register" element={<AuthPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -1,0 +1,47 @@
+.role-switcher {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  background: var(--color-gray-100);
+  border-radius: 12px;
+  border: 1px solid var(--color-gray-200);
+}
+
+.role-switcher__tab {
+  position: relative;
+  padding: clamp(5px, 1.1vh, 8px) 12px;
+  border-radius: 10px;
+  font-size: clamp(0.78rem, 1.2vh, 0.88rem);
+  font-weight: 600;
+  color: var(--color-gray-500);
+  transition: color 0.25s ease;
+  overflow: hidden;
+}
+
+.role-switcher__tab.is-active {
+  color: #fff;
+}
+
+.role-switcher__pill {
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-brand-soft);
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(70, 54, 201, 0.28);
+  z-index: 0;
+}
+
+.role-switcher__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.role-switcher__tab:hover:not(.is-active) {
+  color: var(--color-navy);
+}

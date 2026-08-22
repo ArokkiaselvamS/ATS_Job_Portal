@@ -65,13 +65,13 @@ export default function Navbar() {
         {/* Right side: Auth Action Buttons (Desktop & Tablet) */}
         <div className="hidden items-center gap-3 sm:flex">
           <Link
-            to="/auth/login"
+            to="/login"
             className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-800 transition duration-150 hover:border-[#2B26D9] hover:bg-slate-50 hover:text-[#2B26D9]"
           >
             Log In
           </Link>
           <Link
-            to="/auth/register"
+            to="/register"
             className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2B26D9] to-[#4334ee] px-6 py-2.5 text-[15px] font-bold text-white shadow-md shadow-indigo-200 transition duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-300 active:translate-y-0"
           >
             Join Now
@@ -82,7 +82,7 @@ export default function Navbar() {
         {/* Mobile / Tablet Hamburger Toggle */}
         <div className="flex items-center gap-2 lg:hidden">
           <Link
-            to="/auth/register"
+            to="/register"
             className="hidden sm:none rounded-lg bg-[#2B26D9] px-3.5 py-1.5 text-xs font-bold text-white sm:hidden"
           >
             Join
@@ -142,7 +142,7 @@ export default function Navbar() {
             {/* Mobile Auth Actions */}
             <div className="mt-8 border-t border-slate-100 pt-6 space-y-3">
               <Link
-                to="/auth/login"
+                to="/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3.5 text-center text-base font-bold text-slate-800 transition hover:bg-slate-50"
               >
@@ -150,7 +150,7 @@ export default function Navbar() {
                 Log In
               </Link>
               <Link
-                to="/auth/register"
+                to="/register"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2B26D9] to-[#F96302] py-3.5 text-center text-base font-bold text-white shadow-lg shadow-indigo-200 transition hover:opacity-95"
               >

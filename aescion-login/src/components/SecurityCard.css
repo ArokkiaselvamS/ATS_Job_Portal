@@ -1,0 +1,47 @@
+.security-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #f1f4fe;
+  border: 1px solid #e0e7ff;
+}
+
+.security-card__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0e7ff;
+}
+
+.security-card__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.security-card__title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #312e81;
+  line-height: 1.2;
+}
+
+.security-card__desc {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.security-card__badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+

@@ -1,0 +1,66 @@
+.language-selector {
+  position: relative;
+}
+
+.language-selector__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.language-selector__trigger:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.language-selector__chevron {
+  display: flex;
+  color: #64748b;
+}
+
+.language-selector__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 170px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+  padding: 6px;
+  z-index: 40;
+}
+
+.language-selector__option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.language-selector__option:hover {
+  background: #f1f4fe;
+  color: #4338ca;
+}
+
+.language-selector__option svg {
+  color: #4338ca;
+}
+

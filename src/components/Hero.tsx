@@ -78,7 +78,7 @@ export default function Hero() {
 
             {/* Option 4: Join Now (Primary CTA with colorful gradient & glowing emphasis) */}
             <Link
-              to="/auth/register"
+              to="/register"
               className="group inline-flex items-center gap-2 rounded-xl sm:rounded-full bg-gradient-to-r from-[#3B28EC] via-[#6335F3] to-[#F25C05] hover:opacity-95 px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap sm:ml-2"
             >
               <span>Join Now</span>

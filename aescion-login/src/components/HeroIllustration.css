@@ -1,0 +1,47 @@
+.hero-illustration {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.hero-illustration__svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.scene-notebook__text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 6px;
+  letter-spacing: 0.3px;
+}
+
+.scene-notebook__text--blue {
+  fill: var(--color-blue);
+}
+
+.scene-notebook__text--orange {
+  fill: var(--color-orange);
+}
+
+.scene-notebook__text--purple {
+  fill: var(--color-purple);
+}
+
+.scene-laptop__ai {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  fill: var(--color-orange);
+}
+
+.scene-particle {
+  fill: var(--color-purple-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-illustration * {
+    animation: none !important;
+  }
+}

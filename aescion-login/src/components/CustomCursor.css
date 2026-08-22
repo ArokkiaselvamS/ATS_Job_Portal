@@ -1,0 +1,25 @@
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-purple);
+  background: rgba(91, 79, 232, 0.08);
+  pointer-events: none;
+  z-index: 999;
+  mix-blend-mode: normal;
+}
+
+.custom-cursor.is-expanded {
+  background: rgba(91, 79, 232, 0.14);
+  border-color: var(--color-orange);
+}
+
+@media (max-width: 860px), (pointer: coarse) {
+  .custom-cursor {
+    display: none;
+  }
+}
