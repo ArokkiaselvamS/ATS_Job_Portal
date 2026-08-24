@@ -8,7 +8,7 @@ import aescionWordmark from "../assets/branding/aescion-wordmark.png";
 
 const navItems = [
   { to: "/home", label: "Dashboard" },
-  { to: "/connections", label: "Matches" },
+  { to: "/connections", label: "Network" },
   { to: "/explore-jobs", label: "Jobs" },
   { to: "/applications", label: "Job Tracker" },
   { to: "/resume-builder", label: "Documents" },
