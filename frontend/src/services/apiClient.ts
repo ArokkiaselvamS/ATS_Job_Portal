@@ -55,3 +55,36 @@ export const authApi = {
 export const healthApi = {
   check: () => apiRequest('/health'),
 };
+
+export interface ReferralStats {
+  invitesSent: number;
+  joined: number;
+  activeUsers: number;
+  rewardsEarned: number;
+}
+
+export interface ReferralInvitation {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  channel?: string;
+  date: string;
+}
+
+export const referralApi = {
+  sendInvitations: (emails: string[]) =>
+    apiRequest<{ sent: number; skipped: number; joined: number; failed: number }>('/invitations/send', {
+      method: 'POST',
+      body: JSON.stringify({ emails }),
+    }),
+  getInvitations: () =>
+    apiRequest<ReferralInvitation[]>('/invitations'),
+  getStats: () =>
+    apiRequest<ReferralStats>('/referrals/stats'),
+  recordShare: (channel: string) =>
+    apiRequest('/referrals/share', {
+      method: 'POST',
+      body: JSON.stringify({ channel }),
+    }),
+};

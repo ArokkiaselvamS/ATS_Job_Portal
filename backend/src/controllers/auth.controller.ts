@@ -4,6 +4,11 @@ import prisma from '../utils/prisma';
 import { hashPassword, verifyPassword } from '../utils/password';
 import { generateToken } from '../utils/jwt';
 
+function generateReferralCode(firstName: string, lastName: string, userId: number): string {
+  const base = (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
+  return `${base}${String(userId).padStart(4, '0')}`;
+}
+
 const registerSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
@@ -35,11 +40,15 @@ export const register = async (req: Request, res: Response, next: NextFunction):
         passwordHash: hashedPassword,
         phone: data.phone,
         role: 'JOB_SEEKER',
+        referralCode: '',
         profile: {
           create: {},
         },
       },
     });
+
+    const referralCode = generateReferralCode(data.firstName, data.lastName, user.id);
+    await prisma.user.update({ where: { id: user.id }, data: { referralCode } });
 
     const token = generateToken({ userId: user.id, role: user.role });
 
@@ -59,6 +68,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        referralCode,
       },
     });
   } catch (error) {
@@ -114,6 +124,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        referralCode: user.referralCode,
       },
     });
   } catch (error) {
@@ -143,6 +154,7 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
         email: true,
         role: true,
         profileImage: true,
+        referralCode: true,
         isActive: true,
         createdAt: true,
       },

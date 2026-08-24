@@ -7,6 +7,7 @@ export interface User {
   email: string;
   role: string;
   profileImage?: string;
+  referralCode?: string;
 }
 
 interface AuthContextType {
