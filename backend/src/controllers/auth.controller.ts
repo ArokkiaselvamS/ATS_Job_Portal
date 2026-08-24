@@ -56,6 +56,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -112,6 +113,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -137,6 +139,7 @@ export const logout = (req: Request, res: Response): void => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    path: '/',
   });
   res.json({ success: true, message: 'Logout successful' });
 };

@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── USER ────────────────────────────────────────────────
+
 model User {
   id              Int           @id @default(autoincrement())
   firstName       String
@@ -22,6 +24,11 @@ model User {
   referrals       User[]        @relation("Referrals")
   isEmailVerified Boolean       @default(false)
   isActive        Boolean       @default(true)
+  isSuspended     Boolean       @default(false)
+  isBlocked       Boolean       @default(false)
+  suspendedAt     DateTime?
+  blockedAt       DateTime?
+  suspensionReason String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   lastLoginAt     DateTime?
@@ -31,7 +38,12 @@ model User {
   savedJobs            SavedJob[]
   sentInvitations      Invitation[]
   receivedInvitations  Invitation[]    @relation("ReceivedInvitations")
+  companies            CompanyAdmin[]
+  auditLogs            AuditLog[]
+  notifications        Notification[]
 }
+
+// ─── PROFILE ─────────────────────────────────────────────
 
 model Profile {
   id           Int      @id @default(autoincrement())
@@ -53,43 +65,90 @@ model Profile {
   updatedAt    DateTime @updatedAt
 }
 
+// ─── COMPANY ─────────────────────────────────────────────
+
 model Company {
-  id          Int      @id @default(autoincrement())
-  name        String
-  logo        String?
-  description String?
-  website     String?
-  industry    String?
-  companySize String?
-  location    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  jobs        Job[]
+  id                 Int                @id @default(autoincrement())
+  name               String
+  logo               String?
+  description        String?
+  website            String?
+  industry           String?
+  companySize        String?
+  location           String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  verifiedById       Int?
+  rejectionReason    String?
+  isSuspended        Boolean            @default(false)
+  suspendedAt        DateTime?
+  suspensionReason   String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  jobs               Job[]
+  admins             CompanyAdmin[]
+  reports            PlatformReport[]
 }
+
+// ─── COMPANY ADMIN (join table) ─────────────────────────
+
+model CompanyAdmin {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+  role      String  @default("admin")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, companyId])
+}
+
+// ─── JOB ─────────────────────────────────────────────────
 
 model Job {
-  id              Int           @id @default(autoincrement())
-  title           String
-  description     String
-  companyId       Int
-  company         Company       @relation(fields: [companyId], references: [id])
-  location        String?
-  jobType         JobType
-  workMode        WorkMode
-  experienceLevel String?
-  salaryMin       Float?
-  salaryMax       Float?
-  salaryCurrency  String?       @default("USD")
-  skills          String[]
-  status          JobStatus     @default(ACTIVE)
-  postedAt        DateTime      @default(now())
-  closingDate     DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id               Int                @id @default(autoincrement())
+  title            String
+  description      String
+  companyId        Int
+  company          Company            @relation(fields: [companyId], references: [id])
+  location         String?
+  jobType          JobType
+  workMode         WorkMode
+  experienceLevel  String?
+  salaryMin        Float?
+  salaryMax        Float?
+  salaryCurrency   String?            @default("USD")
+  skills           String[]
+  status           JobStatus          @default(DRAFT)
+  source           JobSource          @default(INTERNAL)
+  sourceType       String?
+  sourceJobId      String?
+  externalApplyUrl String?
+  categoryId       Int?
+  category         Category?          @relation(fields: [categoryId], references: [id])
+  approvedAt       DateTime?
+  approvedById     Int?
+  rejectionReason  String?
+  isReported       Boolean            @default(false)
+  reportCount      Int                @default(0)
+  views            Int                @default(0)
+  postedAt         DateTime           @default(now())
+  closingDate      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
-  applications    Application[]
-  savedJobs       SavedJob[]
+  applications     Application[]
+  savedJobs        SavedJob[]
+
+  @@index([source, sourceJobId])
+  @@index([status])
+  @@index([companyId])
+  @@index([categoryId])
 }
+
+// ─── APPLICATION ─────────────────────────────────────────
 
 model Application {
   id             Int               @id @default(autoincrement())
@@ -104,7 +163,13 @@ model Application {
   resumeUrl      String?
   coverLetterUrl String?
   createdAt      DateTime          @default(now())
+
+  @@index([status])
+  @@index([jobId])
+  @@index([userId])
 }
+
+// ─── SAVED JOB ───────────────────────────────────────────
 
 model SavedJob {
   id        Int      @id @default(autoincrement())
@@ -116,6 +181,8 @@ model SavedJob {
 
   @@unique([userId, jobId])
 }
+
+// ─── INVITATION ──────────────────────────────────────────
 
 model Invitation {
   id            Int                @id @default(autoincrement())
@@ -132,10 +199,183 @@ model Invitation {
   @@unique([senderId, email])
 }
 
+// ─── JOB FEED SOURCE ────────────────────────────────────
+
+model JobFeedSource {
+  id               Int                @id @default(autoincrement())
+  name             String
+  sourceType       FeedSourceType
+  endpoint         String?
+  authType         FeedAuthType       @default(NONE)
+  credentialsRef   String?
+  syncFrequency    SyncFrequency      @default(HOURLY)
+  isActive         Boolean            @default(true)
+  lastSyncAt       DateTime?
+  nextSyncAt       DateTime?
+  totalJobs        Int                @default(0)
+  syncErrorCount   Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  syncLogs         JobFeedSyncLog[]
+  errors           JobFeedError[]
+
+  @@index([isActive])
+}
+
+// ─── JOB FEED SYNC LOG ──────────────────────────────────
+
+model JobFeedSyncLog {
+  id            Int              @id @default(autoincrement())
+  sourceId      Int
+  source        JobFeedSource    @relation(fields: [sourceId], references: [id])
+  startedAt     DateTime         @default(now())
+  completedAt   DateTime?
+  status        SyncStatus       @default(RUNNING)
+  fetchedCount  Int              @default(0)
+  newCount      Int              @default(0)
+  updatedCount  Int              @default(0)
+  expiredCount  Int              @default(0)
+  duplicateCount Int             @default(0)
+  errorCount    Int              @default(0)
+  errorDetails  String?
+  createdAt     DateTime         @default(now())
+
+  @@index([sourceId])
+  @@index([status])
+}
+
+// ─── JOB FEED ERROR ─────────────────────────────────────
+
+model JobFeedError {
+  id          Int           @id @default(autoincrement())
+  sourceId    Int
+  source      JobFeedSource @relation(fields: [sourceId], references: [id])
+  jobId       String?
+  jobTitle    String?
+  errorMessage String
+  errorData   Json?
+  status      FeedErrorStatus @default(OPEN)
+  retriedAt   DateTime?
+  retryCount  Int           @default(0)
+  resolvedAt  DateTime?
+  createdAt   DateTime      @default(now())
+
+  @@index([sourceId])
+  @@index([status])
+}
+
+// ─── CATEGORY ────────────────────────────────────────────
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobs        Job[]
+  skills      Skill[]
+}
+
+// ─── SKILL ───────────────────────────────────────────────
+
+model Skill {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  canonicalId Int?
+  canonical   Skill?   @relation("SkillCanonical", fields: [canonicalId], references: [id])
+  aliases     Skill[]  @relation("SkillCanonical")
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── AUDIT LOG ───────────────────────────────────────────
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  adminId    Int
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  entityType String
+  entityId   Int?
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ─── PLATFORM REPORT ─────────────────────────────────────
+
+model PlatformReport {
+  id           Int          @id @default(autoincrement())
+  reportedById Int
+  targetType   ReportTarget
+  targetId     Int
+  reason       ReportReason
+  description  String?
+  status       ReportStatus @default(OPEN)
+  reviewedById Int?
+  reviewedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  company      Company?     @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([targetType, targetId])
+}
+
+// ─── NOTIFICATION ────────────────────────────────────────
+
+model Notification {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  user       User             @relation(fields: [userId], references: [id])
+  type       NotificationType
+  title      String
+  message    String
+  entityType String?
+  entityId   Int?
+  isRead     Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+// ─── PLATFORM SETTING ────────────────────────────────────
+
+model PlatformSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
 enum Role {
   JOB_SEEKER
   EMPLOYER
+  COMPANY_ADMIN
   ADMIN
+  SUPER_ADMIN
 }
 
 enum JobType {
@@ -152,9 +392,23 @@ enum WorkMode {
 }
 
 enum JobStatus {
+  DRAFT
+  PENDING_REVIEW
   ACTIVE
+  PUBLISHED
+  PAUSED
   INACTIVE
   CLOSED
+  EXPIRED
+  REJECTED
+  SUSPENDED
+}
+
+enum JobSource {
+  INTERNAL
+  GREENHOUSE
+  LEVER
+  OTHER
 }
 
 enum ApplicationStatus {
@@ -172,4 +426,85 @@ enum InvitationStatus {
   PENDING
   JOINED
   ACTIVE
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  VERIFIED
+}
+
+enum FeedSourceType {
+  GREENHOUSE
+  LEVER
+  CUSTOM_API
+  RSS
+  OTHER
+}
+
+enum FeedAuthType {
+  NONE
+  API_KEY
+  OAUTH2
+  BASIC
+  BEARER
+}
+
+enum SyncFrequency {
+  EVERY_15_MIN
+  EVERY_30_MIN
+  HOURLY
+  EVERY_6_HOURS
+  EVERY_12_HOURS
+  DAILY
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum FeedErrorStatus {
+  OPEN
+  RETRYING
+  RESOLVED
+  IGNORED
+}
+
+enum ReportTarget {
+  JOB
+  COMPANY
+  USER
+}
+
+enum ReportReason {
+  FAKE_JOB
+  SPAM
+  FRAUD
+  ABUSIVE_COMPANY
+  INCORRECT_INFO
+  SUSPICIOUS_ACTIVITY
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum NotificationType {
+  COMPANY_APPROVED
+  COMPANY_REJECTED
+  JOB_APPROVED
+  JOB_REJECTED
+  JOB_SUSPENDED
+  FEED_SYNC_COMPLETED
+  FEED_SYNC_FAILED
+  REPORT_RECEIVED
+  ACCOUNT_SUSPENDED
+  SYSTEM
 }

@@ -247,3 +247,118 @@ FRONTEND_URL="http://localhost:5173"
 | **Prisma Generate**| `backend/` | `npx prisma generate` |
 | **Prisma Migrate** | `backend/` | `npx prisma migrate dev` |
 | **Prisma Studio**  | `backend/` | `npx prisma studio` |
+| **Seed Super Admin** | `backend/` | `node prisma/seed-admin.js` |
+
+---
+
+## Super Admin Portal
+
+AESCION includes a **Super Admin** role that provides full platform management capabilities.
+
+### Super Admin Login
+
+| Field | Value |
+| :--- | :--- |
+| **Login URL** | `http://localhost:5173/admin` |
+| **Email** | `admin@aescion.com` |
+| **Password** | `Admin@123456` |
+
+> **Important:** The `/admin` route is exclusively for Super Admin access. Job Seekers and Company Admins cannot access this portal.
+
+### How to Access the Admin Portal
+
+1. Start the backend and frontend servers
+2. Open `http://localhost:5173/admin` in your browser
+3. Enter the Super Admin credentials above
+4. You will be redirected to the Admin Dashboard
+
+### Creating Additional Super Admin Accounts
+
+Run the seed script with different environment variables:
+
+```bash
+cd backend
+
+# Using defaults (admin@aescion.com / Admin@123456)
+node prisma/seed-admin.js
+
+# Using custom credentials
+ADMIN_EMAIL="newadmin@aescion.com" ADMIN_PASSWORD="MyPass123" node prisma/seed-admin.js
+```
+
+Or create directly via Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+Then add a new User with `role` set to `SUPER_ADMIN`.
+
+### Admin Portal Features
+
+| Section | Route | Description |
+| :--- | :--- | :--- |
+| **Dashboard** | `/admin/dashboard` | Platform statistics and overview |
+| **Job Seekers** | `/admin/job-seekers` | Manage job seeker accounts |
+| **Company Admins** | `/admin/company-admins` | Manage company admin accounts |
+| **Companies** | `/admin/companies` | Company verification and management |
+| **Jobs** | `/admin/jobs` | Job moderation and management |
+| **Applications** | `/admin/applications` | Application monitoring |
+| **Feed Sources** | `/admin/job-feeds` | External job feed configuration |
+| **Sync History** | `/admin/job-feeds/sync-history` | Feed synchronization logs |
+| **Failed Jobs** | `/admin/job-feeds/failed-jobs` | Failed feed imports and retry |
+| **Categories** | `/admin/categories` | Job category management |
+| **Skills** | `/admin/skills` | Skill management and merging |
+| **Reports** | `/admin/reports` | Platform report management |
+| **Analytics** | `/admin/analytics` | Real-time platform analytics |
+| **Security** | `/admin/security` | Security monitoring center |
+| **Audit Logs** | `/admin/audit-logs` | Admin action audit trail |
+| **Notifications** | `/admin/notifications` | Notification management |
+| **ATS Settings** | `/admin/ats-settings` | ATS engine configuration |
+| **Platform Settings** | `/admin/settings` | Platform-wide settings |
+
+### Admin API Endpoints
+
+All admin API endpoints are prefixed with `/api/admin` and require `SUPER_ADMIN` role authentication.
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| POST | `/api/admin/auth/login` | Admin login |
+| POST | `/api/admin/auth/logout` | Admin logout |
+| GET | `/api/admin/auth/me` | Get current admin |
+| GET | `/api/admin/dashboard` | Dashboard statistics |
+| GET | `/api/admin/job-seekers` | List job seekers |
+| PATCH | `/api/admin/job-seekers/:id/suspend` | Suspend user |
+| PATCH | `/api/admin/job-seekers/:id/activate` | Activate user |
+| PATCH | `/api/admin/job-seekers/:id/block` | Block user |
+| GET | `/api/admin/companies` | List companies |
+| PATCH | `/api/admin/companies/:id/verify` | Verify company |
+| PATCH | `/api/admin/companies/:id/reject` | Reject company |
+| PATCH | `/api/admin/companies/:id/suspend` | Suspend company |
+| GET | `/api/admin/jobs` | List jobs |
+| PATCH | `/api/admin/jobs/:id/approve` | Approve job |
+| PATCH | `/api/admin/jobs/:id/reject` | Reject job |
+| PATCH | `/api/admin/jobs/:id/suspend` | Suspend job |
+| GET | `/api/admin/applications` | List applications |
+| GET | `/api/admin/job-feeds` | List feed sources |
+| POST | `/api/admin/job-feeds` | Create feed source |
+| POST | `/api/admin/job-feeds/:id/sync` | Trigger sync |
+| GET | `/api/admin/categories` | List categories |
+| POST | `/api/admin/categories` | Create category |
+| GET | `/api/admin/skills` | List skills |
+| POST | `/api/admin/skills` | Create skill |
+| GET | `/api/admin/reports` | List reports |
+| GET | `/api/admin/analytics` | Analytics data |
+| GET | `/api/admin/security` | Security data |
+| GET | `/api/admin/audit-logs` | Audit logs |
+| GET | `/api/admin/notifications` | Notifications |
+| GET | `/api/admin/settings` | Platform settings |
+| PATCH | `/api/admin/settings` | Update settings |
+
+### Three User Roles
+
+| Role | Login URL | Description |
+| :--- | :--- | :--- |
+| **JOB_SEEKER** | `http://localhost:5173/login` | Job seekers looking for opportunities |
+| **COMPANY_ADMIN** | `http://localhost:5173/login` | Company administrators managing jobs |
+| **SUPER_ADMIN** | `http://localhost:5173/admin` | Platform administrators with full access |

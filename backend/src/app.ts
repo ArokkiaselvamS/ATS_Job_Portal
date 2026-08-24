@@ -5,6 +5,7 @@ import { env } from './config/env';
 import { errorHandler } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import referralRoutes from './routes/referral.routes';
+import adminRoutes from './routes/admin/index';
 
 const app: Application = express();
 
@@ -21,8 +22,11 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({ success: true, message: 'Aescion API is running' });
 });
 
-// Routes
+// Routes — ORDER MATTERS: /api/admin must come BEFORE /api
+// The referral routes at /api use requireAuth middleware that would
+// intercept /api/admin/* requests and return 401 before admin handlers run.
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api', referralRoutes);
 
 // 404 handler
