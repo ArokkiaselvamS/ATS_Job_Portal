@@ -2,12 +2,9 @@ import { useState } from "react";
 import {
   Search,
   MapPin,
-  Bookmark,
-  CheckCircle2,
-  AlertTriangle,
   ChevronDown,
+  Briefcase,
 } from "lucide-react";
-import { mockJobs } from "../../data/mockData";
 
 const jobTypeFilters = ["Full Time", "Part Time", "Internship", "Contract"];
 const workModeFilters = ["Remote", "Hybrid", "On-site"];
@@ -16,7 +13,6 @@ const dateFilters = ["Today", "Last 3 Days", "Last 7 Days", "Last 30 Days"];
 
 export default function ExploreJobs() {
   const [showFilters, setShowFilters] = useState(false);
-  const highlightJob = mockJobs[0]; // for the match card
 
   return (
     <div className="space-y-8">
@@ -127,7 +123,7 @@ export default function ExploreJobs() {
         {/* Job Results */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">{mockJobs.length} jobs found</p>
+            <p className="text-sm text-slate-500">0 jobs found</p>
             <select className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 outline-none focus:ring-2 focus:ring-blue-100">
               <option>Most Relevant</option>
               <option>Newest</option>
@@ -135,48 +131,21 @@ export default function ExploreJobs() {
             </select>
           </div>
 
-          <div className="space-y-3">
-            {mockJobs.map((job) => (
-              <div
-                key={job.id}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-2">
-                    <div>
-                      <h3 className="text-[15px] font-semibold text-slate-900">{job.title}</h3>
-                      <p className="text-sm text-slate-500">{job.company}</p>
-                    </div>
-                    <p className="text-xs text-slate-500">
-                      {job.location} · {job.workMode} · ₹{(job.salaryMin / 100000).toFixed(0)}–{(job.salaryMax / 100000).toFixed(0)} LPA
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {job.skills.map((s) => (
-                        <span
-                          key={s}
-                          className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-[11px] text-slate-400">Posted {job.postedAt}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <button className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-50 hover:text-amber-500" title="Save">
-                      <Bookmark className="h-4 w-4" />
-                    </button>
-                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700">
-                      Apply Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          {/* Empty State */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+              <Briefcase className="h-8 w-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              No Jobs Available
+            </h3>
+            <p className="mt-2 text-sm text-slate-500">
+              Search for a job or add a job application to start building your tracker.
+            </p>
           </div>
         </div>
 
-        {/* Job Match Card */}
+        {/* Job Match Card - Empty */}
         <div className="hidden lg:block">
           <div className="sticky top-[84px] rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="mb-3 text-[15px] font-semibold text-slate-900">Job Match</h3>
@@ -184,36 +153,14 @@ export default function ExploreJobs() {
               <div className="relative flex h-24 w-24 items-center justify-center">
                 <svg className="h-24 w-24 -rotate-90" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    fill="none"
-                    stroke="#2563eb"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={`${(highlightJob.matchPercent || 91) * 2.64} 264`}
-                  />
                 </svg>
-                <span className="absolute text-xl font-bold text-slate-900">
-                  {highlightJob.matchPercent || 91}%
+                <span className="absolute text-xl font-bold text-slate-400">
+                  --
                 </span>
               </div>
             </div>
-            <div className="space-y-2">
-              {highlightJob.skills.map((s) => (
-                <div key={s} className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span className="text-slate-600">{s}</span>
-                </div>
-              ))}
-              <div className="flex items-center gap-2 text-sm">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <span className="text-slate-500">AWS preferred</span>
-              </div>
-            </div>
-            <p className="mt-4 text-xs leading-relaxed text-slate-500">
-              Your skills match {highlightJob.matchPercent || 91}% of the requirements for this role.
+            <p className="text-center text-xs text-slate-400">
+              Complete your profile to see job matches.
             </p>
           </div>
         </div>

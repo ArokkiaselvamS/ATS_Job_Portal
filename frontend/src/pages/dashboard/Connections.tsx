@@ -8,11 +8,6 @@ import {
   X,
   Users as UsersIcon,
 } from "lucide-react";
-import {
-  mockConnections,
-  mockConnectionRequests,
-  mockPeopleYouMayKnow,
-} from "../../data/mockData";
 
 const tabs = ["All", "My Connections", "Requests", "Discover"] as const;
 type Tab = (typeof tabs)[number];
@@ -38,11 +33,7 @@ export default function Connections() {
   const [activeTab, setActiveTab] = useState<Tab>("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredConnections = mockConnections.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.company.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredConnections: any[] = [];
 
   return (
     <div className="space-y-8">
@@ -100,166 +91,49 @@ export default function Connections() {
             <span className="text-sm text-slate-500">{filteredConnections.length} connections</span>
           </div>
 
-          {(activeTab === "All" || activeTab === "My Connections") && (
-            <div className="space-y-3">
-              {filteredConnections.map((c, idx) => (
-                <div
-                  key={c.id}
-                  className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarColors[idx % avatarColors.length]}`}
-                    >
-                      {getInitials(c.name)}
-                    </div>
-                    <div>
-                      <h3 className="text-[15px] font-semibold text-slate-900">{c.name}</h3>
-                      <p className="text-sm text-slate-500">
-                        {c.title} at {c.company}
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {c.skills.map((s) => (
-                          <span
-                            key={s}
-                            className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Message
-                    </button>
-                    <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      View Profile
-                    </button>
-                  </div>
-                </div>
-              ))}
+          {/* Empty State for all tabs */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+              {activeTab === "Requests" ? (
+                <Check className="h-8 w-8 text-slate-400" />
+              ) : activeTab === "Discover" ? (
+                <UserPlus className="h-8 w-8 text-slate-400" />
+              ) : (
+                <UsersIcon className="h-8 w-8 text-slate-400" />
+              )}
             </div>
-          )}
-
-          {activeTab === "Requests" && (
-            <div className="space-y-3">
-              {mockConnectionRequests.map((r, idx) => (
-                <div
-                  key={r.id}
-                  className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarColors[(idx + 3) % avatarColors.length]}`}
-                    >
-                      {getInitials(r.name)}
-                    </div>
-                    <div>
-                      <h3 className="text-[15px] font-semibold text-slate-900">{r.name}</h3>
-                      <p className="text-sm text-slate-500">
-                        {r.title} at {r.company}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700">
-                      <Check className="h-3.5 w-3.5" />
-                      Accept
-                    </button>
-                    <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
-                      <X className="h-3.5 w-3.5" />
-                      Decline
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "Discover" && (
-            <div className="space-y-3">
-              {mockPeopleYouMayKnow.map((p, idx) => (
-                <div
-                  key={p.id}
-                  className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarColors[(idx + 1) % avatarColors.length]}`}
-                    >
-                      {getInitials(p.name)}
-                    </div>
-                    <div>
-                      <h3 className="text-[15px] font-semibold text-slate-900">{p.name}</h3>
-                      <p className="text-sm text-slate-500">
-                        {p.title} at {p.company}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {p.mutualConnections} mutual connections
-                      </p>
-                    </div>
-                  </div>
-                  <button className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700">
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Connect
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+            <h3 className="text-lg font-semibold text-slate-900">
+              {activeTab === "Requests"
+                ? "No Pending Requests"
+                : activeTab === "Discover"
+                  ? "No People to Discover"
+                  : "No Connections Yet"}
+            </h3>
+            <p className="mt-2 text-sm text-slate-500">
+              {activeTab === "Requests"
+                ? "Connection requests from other professionals will appear here."
+                : activeTab === "Discover"
+                  ? "Discover people in your industry to grow your network."
+                  : "Start building your professional network by connecting with others."}
+            </p>
+          </div>
         </div>
 
         {/* Right Sidebar */}
         <div className="space-y-6">
           {/* Connection Requests */}
-          {activeTab !== "Requests" && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-[15px] font-semibold text-slate-900">Connection Requests</h3>
-              <div className="space-y-3">
-                {mockConnectionRequests.slice(0, 2).map((r, idx) => (
-                  <div key={r.id} className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${avatarColors[(idx + 3) % avatarColors.length]}`}
-                    >
-                      {getInitials(r.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-800">{r.name}</p>
-                      <p className="truncate text-xs text-slate-500">{r.title}</p>
-                    </div>
-                    <button className="rounded-md bg-blue-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-700">
-                      Accept
-                    </button>
-                  </div>
-                ))}
-              </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-[15px] font-semibold text-slate-900">Connection Requests</h3>
+            <div className="py-6 text-center">
+              <p className="text-xs text-slate-400">No pending requests</p>
             </div>
-          )}
+          </div>
 
           {/* People You May Know */}
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="mb-4 text-[15px] font-semibold text-slate-900">People You May Know</h3>
-            <div className="space-y-3">
-              {mockPeopleYouMayKnow.map((p, idx) => (
-                <div key={p.id} className="flex items-center gap-3">
-                  <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${avatarColors[(idx + 1) % avatarColors.length]}`}
-                  >
-                    {getInitials(p.name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-800">{p.name}</p>
-                    <p className="truncate text-xs text-slate-500">{p.title} at {p.company}</p>
-                  </div>
-                  <button className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-600 hover:bg-blue-100">
-                    Connect
-                  </button>
-                </div>
-              ))}
+            <div className="py-6 text-center">
+              <p className="text-xs text-slate-400">No suggestions yet</p>
             </div>
           </div>
 
@@ -271,7 +145,7 @@ export default function Connections() {
                 <UsersIcon className="h-5 w-5 text-violet-600" />
               </div>
               <div>
-                <p className="text-xl font-bold text-slate-900">24</p>
+                <p className="text-xl font-bold text-slate-900">0</p>
                 <p className="text-xs text-slate-500">Total connections</p>
               </div>
             </div>

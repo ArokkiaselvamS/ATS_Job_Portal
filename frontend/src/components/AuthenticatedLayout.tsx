@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, ChevronDown, User, Settings, LogOut, Trophy, BarChart3, FileText } from "lucide-react";
+import { Menu, X, ChevronDown, User, Settings, LogOut, Trophy, BarChart3, FileText, Sparkles } from "lucide-react";
 
 import aescionSymbol from "../assets/branding/aescion-symbol.png";
 import aescionWordmark from "../assets/branding/aescion-wordmark.png";
@@ -9,6 +9,7 @@ import aescionWordmark from "../assets/branding/aescion-wordmark.png";
 const navItems = [
   { to: "/home", label: "Dashboard" },
   { to: "/connections", label: "Network" },
+  { to: "/matches", label: "Matches", icon: Sparkles },
   { to: "/explore-jobs", label: "Jobs" },
   { to: "/applications", label: "Job Tracker" },
   { to: "/resume-builder", label: "Documents" },
@@ -61,7 +62,7 @@ export default function AuthenticatedLayout() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `relative py-5 text-[14px] font-medium transition-colors ${
+                  `relative flex items-center gap-1.5 py-5 text-[14px] font-medium transition-colors ${
                     isActive
                       ? "text-blue-600 font-semibold"
                       : "text-slate-600 hover:text-slate-900"
@@ -70,6 +71,7 @@ export default function AuthenticatedLayout() {
               >
                 {({ isActive }) => (
                   <>
+                    {item.icon && <item.icon className="h-3.5 w-3.5" />}
                     <span>{item.label}</span>
                     {isActive && (
                       <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full bg-blue-600" />

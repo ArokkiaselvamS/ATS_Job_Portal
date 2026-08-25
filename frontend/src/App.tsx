@@ -18,6 +18,7 @@ import JobApplications from "./pages/dashboard/Applications";
 import Services from "./pages/dashboard/Services";
 import Invite from "./pages/dashboard/Invite";
 import Profile from "./pages/dashboard/Profile";
+import Matches from "./pages/dashboard/Matches";
 
 // Admin
 import { AdminAuthProvider } from "./hooks/useAdminAuth";
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/home" element={<DashboardHome />} />
         <Route path="/resume-builder" element={<ErrorBoundary><AuthResumeBuilder /></ErrorBoundary>} />
         <Route path="/connections" element={<Connections />} />
+        <Route path="/matches" element={<Matches />} />
         <Route path="/explore-jobs" element={<ExploreJobs />} />
         <Route path="/applications" element={<JobApplications />} />
         <Route path="/services" element={<Services />} />

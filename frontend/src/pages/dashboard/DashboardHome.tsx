@@ -16,7 +16,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function DashboardHome() {
   const { user } = useAuth();
-  const userName = user?.firstName || "surya";
+  const userName = user?.firstName || "there";
 
   return (
     <div className="space-y-8 pb-10">
@@ -31,7 +31,7 @@ export default function DashboardHome() {
           {/* Left Text */}
           <div className="max-w-2xl space-y-2">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-              Welcome back, {userName}! 👋
+              Welcome back, {userName}!
             </h1>
             <p className="text-sm font-normal leading-relaxed text-slate-500 md:text-[15px]">
               Let's build your future. Find the right opportunities and take the next step in your career.
@@ -53,11 +53,11 @@ export default function DashboardHome() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg bg-white p-2.5 shadow-sm border border-slate-100">
                   <span className="text-xs font-medium text-slate-600">Career Growth</span>
-                  <span className="text-xs font-bold text-emerald-600">+18%</span>
+                  <span className="text-xs font-bold text-slate-400">--</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-white p-2.5 shadow-sm border border-slate-100">
                   <span className="text-xs font-medium text-slate-600">Profile Strength</span>
-                  <span className="text-xs font-bold text-blue-600">Excellent</span>
+                  <span className="text-xs font-bold text-slate-400">--</span>
                 </div>
               </div>
             </div>
@@ -109,11 +109,10 @@ export default function DashboardHome() {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">RESUME ATS SCORE</span>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900">82%</span>
+            <span className="text-3xl font-bold text-slate-900">--</span>
           </div>
-          <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
-            <TrendingUp className="h-3.5 w-3.5" />
-            ↑ 5% from last week
+          <p className="mt-1 text-xs font-semibold text-slate-400">
+            Upload your resume to see your score
           </p>
           {/* Subtle Sparkline Curve */}
           <svg className="absolute bottom-2 right-2 h-10 w-24 text-blue-400/30" viewBox="0 0 100 30" fill="none">
@@ -130,17 +129,17 @@ export default function DashboardHome() {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">APPLICATIONS</span>
           </div>
           <div className="mt-4">
-            <span className="text-3xl font-bold text-slate-900">12</span>
+            <span className="text-3xl font-bold text-slate-900">0</span>
           </div>
-          <p className="mt-1 text-xs font-semibold text-emerald-600">
-            3 Interviews
+          <p className="mt-1 text-xs font-semibold text-slate-400">
+            No applications yet
           </p>
           {/* Subtle Bar Chart */}
           <div className="absolute bottom-3 right-3 flex items-end gap-1">
-            <div className="h-4 w-1.5 rounded-t bg-emerald-300/40" />
-            <div className="h-6 w-1.5 rounded-t bg-emerald-400/50" />
-            <div className="h-3 w-1.5 rounded-t bg-emerald-300/40" />
-            <div className="h-8 w-1.5 rounded-t bg-emerald-500/70" />
+            <div className="h-2 w-1.5 rounded-t bg-slate-200/60" />
+            <div className="h-2 w-1.5 rounded-t bg-slate-200/60" />
+            <div className="h-2 w-1.5 rounded-t bg-slate-200/60" />
+            <div className="h-2 w-1.5 rounded-t bg-slate-200/60" />
           </div>
         </div>
 
@@ -153,7 +152,7 @@ export default function DashboardHome() {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">SAVED JOBS</span>
           </div>
           <div className="mt-4">
-            <span className="text-3xl font-bold text-slate-900">18</span>
+            <span className="text-3xl font-bold text-slate-900">0</span>
           </div>
           <a href="/explore-jobs" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700">
             View saved jobs →
@@ -173,9 +172,9 @@ export default function DashboardHome() {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">CONNECTIONS</span>
           </div>
           <div className="mt-4">
-            <span className="text-3xl font-bold text-slate-900">24</span>
+            <span className="text-3xl font-bold text-slate-900">0</span>
           </div>
-          <p className="mt-1 text-xs font-semibold text-purple-600">
+          <p className="mt-1 text-xs font-semibold text-purple-400">
             Grow your network
           </p>
           {/* Subtle Purple Wavy Line */}
@@ -198,114 +197,24 @@ export default function DashboardHome() {
             </a>
           </div>
 
-          <div className="space-y-3.5">
-            
-            {/* JOB 1: Software Engineer — ABC Technologies */}
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all hover:shadow-md">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                
-                <div className="flex items-start gap-4">
-                  {/* Company Logo Block */}
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-900 font-bold text-white text-sm shadow-sm">
-                    ABC
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div>
-                      <h3 className="text-[16px] font-bold text-slate-900">Software Engineer</h3>
-                      <p className="text-xs font-medium text-blue-600">ABC Technologies</p>
-                    </div>
-
-                    <p className="text-xs text-slate-500">
-                      Chennai · Hybrid · ₹5–8 LPA
-                    </p>
-
-                    {/* Skill Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {["React", "TypeScript", "Node.js", "PostgreSQL"].map((skill) => (
-                        <span
-                          key={skill}
-                          className="rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Match Badge & Action Buttons */}
-                <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:justify-between">
-                  <span className="rounded-full bg-emerald-50 border border-emerald-200/60 px-3 py-1 text-xs font-semibold text-emerald-600">
-                    91% Match
-                  </span>
-
-                  <div className="flex gap-2">
-                    <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50">
-                      View
-                    </button>
-                    <button className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-95">
-                      Apply
-                    </button>
-                  </div>
-                </div>
-
-              </div>
+          {/* Empty State */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-10 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+              <Briefcase className="h-7 w-7 text-slate-400" />
             </div>
-
-            {/* JOB 2: Frontend Developer — XYZ Solutions */}
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all hover:shadow-md">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                
-                <div className="flex items-start gap-4">
-                  {/* Company Logo Block */}
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-900 font-bold text-white text-sm shadow-sm">
-                    XYZ
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div>
-                      <h3 className="text-[16px] font-bold text-slate-900">Frontend Developer</h3>
-                      <p className="text-xs font-medium text-purple-600">XYZ Solutions</p>
-                    </div>
-
-                    <p className="text-xs text-slate-500">
-                      Bangalore · Remote · ₹4–7 LPA
-                    </p>
-
-                    {/* Skill Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {["React", "JavaScript", "HTML", "CSS"].map((skill) => (
-                        <span
-                          key={skill}
-                          className="rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Match Badge & Action Buttons */}
-                <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:justify-between">
-                  <span className="rounded-full bg-emerald-50 border border-emerald-200/60 px-3 py-1 text-xs font-semibold text-emerald-600">
-                    85% Match
-                  </span>
-
-                  <div className="flex gap-2">
-                    <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50">
-                      View
-                    </button>
-                    <button className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-95">
-                      Apply
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
+            <h3 className="text-base font-semibold text-slate-900">
+              No Recommended Jobs Yet
+            </h3>
+            <p className="mt-1.5 text-sm text-slate-500">
+              Complete your profile to get personalized job recommendations.
+            </p>
+            <a
+              href="/explore-jobs"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700"
+            >
+              <Search className="h-3.5 w-3.5" />
+              Browse Jobs
+            </a>
           </div>
         </div>
 
@@ -313,44 +222,17 @@ export default function DashboardHome() {
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-slate-900">Recent Updates</h2>
 
-          <div className="space-y-3">
-            
-            {/* UPDATE 1: Interview Scheduled */}
-            <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <Calendar className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-900">Interview scheduled</h4>
-                <p className="truncate text-xs font-medium text-slate-500">Frontend Developer – XYZ Ltd</p>
-                <p className="mt-1 text-[11px] text-slate-400">2 hours ago</p>
-              </div>
+          {/* Empty State */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-10 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+              <Clock className="h-7 w-7 text-slate-400" />
             </div>
-
-            {/* UPDATE 2: Application Viewed */}
-            <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Eye className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-900">Application viewed</h4>
-                <p className="truncate text-xs font-medium text-slate-500">Software Engineer – ABC Tech</p>
-                <p className="mt-1 text-[11px] text-slate-400">5 hours ago</p>
-              </div>
-            </div>
-
-            {/* UPDATE 3: Application Submitted */}
-            <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-                <CheckCircle2 className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-900">Application submitted</h4>
-                <p className="truncate text-xs font-medium text-slate-500">Full Stack Developer – Tech Corp</p>
-                <p className="mt-1 text-[11px] text-slate-400">1 day ago</p>
-              </div>
-            </div>
-
+            <h3 className="text-base font-semibold text-slate-900">
+              No Recent Updates
+            </h3>
+            <p className="mt-1.5 text-sm text-slate-500">
+              Activity from your applications will appear here.
+            </p>
           </div>
         </div>
 
