@@ -46,23 +46,216 @@ model User {
 // ─── PROFILE ─────────────────────────────────────────────
 
 model Profile {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @unique
-  user         User     @relation(fields: [userId], references: [id])
-  headline     String?
-  bio          String?
-  location     String?
-  city         String?
-  state        String?
-  country      String?
-  dateOfBirth  DateTime?
-  gender       String?
-  website      String?
-  linkedinUrl  String?
-  githubUrl    String?
-  portfolioUrl String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 Int            @id @default(autoincrement())
+  userId             Int            @unique
+  user               User           @relation(fields: [userId], references: [id])
+
+  // Personal Information
+  headline           String?
+  bio                String?
+  location           String?
+  city               String?
+  state              String?
+  country            String?
+  dateOfBirth        DateTime?
+  gender             String?
+  website            String?
+  linkedinUrl        String?
+  githubUrl          String?
+  portfolioUrl       String?
+  phone              String?
+  preferredLocations String[]
+
+  // Career Information
+  candidateType      CandidateType? @default(STUDENT_FRESHER)
+  careerLevel        String?
+  professionalHeadline String?
+  professionalSummary  String?
+  targetJobTitles    String[]
+  preferredIndustry  String?
+
+  // Resume
+  resumeUrl          String?
+  resumeName         String?
+  resumeUploadedAt   DateTime?
+  resumeVersion      Int?           @default(1)
+
+  // ATS Score
+  atsScore           Int?           @default(0)
+  atsScoreBreakdown  Json?
+  profileCompletion  Int?           @default(0)
+
+  // Job Preferences
+  expectedSalary     Float?
+  currentSalary      Float?
+  noticePeriod       String?
+  availableFrom      DateTime?
+  willingToRelocate  Boolean?       @default(false)
+  workModePreference WorkMode[]
+  employmentTypePref JobType[]
+
+  // Open to Work
+  openToWork         Boolean?       @default(true)
+
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  education          Education[]
+  experience         Experience[]
+  skills             SkillEntry[]
+  projects           Project[]
+  certifications     Certification[]
+  achievements       Achievement[]
+  languages          Language[]
+  resume             Resume?
+}
+
+// ─── EDUCATION ───────────────────────────────────────────
+
+model Education {
+  id                  Int      @id @default(autoincrement())
+  profileId           Int
+  profile             Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  degree              String?
+  fieldOfStudy        String?
+  collegeUniversity   String?
+  startYear           Int?
+  graduationYear      Int?
+  cgpaPercentage      Float?
+  isCurrentlyStudying Boolean? @default(false)
+  description         String?
+  sortOrder           Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ─── EXPERIENCE ──────────────────────────────────────────
+
+model Experience {
+  id              Int      @id @default(autoincrement())
+  profileId       Int
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  company         String?
+  jobTitle        String?
+  employmentType  String?
+  location        String?
+  startDate       DateTime?
+  endDate         DateTime?
+  isCurrentlyWorking Boolean? @default(false)
+  responsibilities String?
+  achievements    String?
+  technologies    String[]
+  isInternship    Boolean? @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── SKILL ENTRY ─────────────────────────────────────────
+
+model SkillEntry {
+  id              Int        @id @default(autoincrement())
+  profileId       Int
+  profile         Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skillName       String
+  category        SkillCategory
+  skillLevel      SkillLevel?
+  yearsOfExperience Float?
+  lastUsed        DateTime?
+  isAutoFilled    Boolean    @default(false)
+  sortOrder       Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+// ─── PROJECT ─────────────────────────────────────────────
+
+model Project {
+  id              Int      @id @default(autoincrement())
+  profileId       Int
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  projectName     String
+  description     String?
+  role            String?
+  technologies    String[]
+  responsibilities String?
+  achievements    String?
+  githubUrl       String?
+  liveDemoUrl     String?
+  startDate       DateTime?
+  endDate         DateTime?
+  isOngoing       Boolean? @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── CERTIFICATION ───────────────────────────────────────
+
+model Certification {
+  id                  Int      @id @default(autoincrement())
+  profileId           Int
+  profile             Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  certificationName   String
+  issuingOrganization String?
+  issueDate           DateTime?
+  expiryDate          DateTime?
+  credentialId        String?
+  credentialUrl      String?
+  certificateUrl      String?
+  sortOrder           Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ─── ACHIEVEMENT ─────────────────────────────────────────
+
+model Achievement {
+  id              Int      @id @default(autoincrement())
+  profileId       Int
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  organization    String?
+  date            DateTime?
+  achievementType String?
+  proofUrl        String?
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── LANGUAGE ────────────────────────────────────────────
+
+model Language {
+  id          Int        @id @default(autoincrement())
+  profileId   Int
+  profile     Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  language    String
+  proficiency LanguageProficiency
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// ─── RESUME ──────────────────────────────────────────────
+
+model Resume {
+  id              Int      @id @default(autoincrement())
+  profileId       Int      @unique
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  fileName        String
+  fileUrl         String
+  fileSize        Int?
+  mimeType        String?
+  atsScore        Int?
+  atsBreakdown    Json?
+  parsedData      Json?
+  uploadedAt      DateTime @default(now())
+  version         Int      @default(1)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 // ─── COMPANY ─────────────────────────────────────────────
@@ -369,6 +562,38 @@ model PlatformSetting {
 }
 
 // ─── ENUMS ───────────────────────────────────────────────
+
+enum CandidateType {
+  STUDENT_FRESHER
+  EXPERIENCED
+}
+
+enum SkillCategory {
+  TECHNICAL
+  PROGRAMMING_LANGUAGE
+  FRAMEWORK
+  LIBRARY
+  DATABASE
+  CLOUD
+  TOOL
+  SOFT_SKILL
+  OTHER
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum LanguageProficiency {
+  BASIC
+  CONVERSATIONAL
+  PROFESSIONAL
+  NATIVE
+  FLUENT
+}
 
 enum Role {
   JOB_SEEKER

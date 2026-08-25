@@ -1,11 +1,13 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import { env } from './config/env';
 import { errorHandler } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import referralRoutes from './routes/referral.routes';
 import adminRoutes from './routes/admin/index';
+import profileRoutes from './routes/profile.routes';
 
 const app: Application = express();
 
@@ -17,16 +19,18 @@ app.use(cors({
   credentials: true,
 }));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ success: true, message: 'Aescion API is running' });
 });
 
 // Routes — ORDER MATTERS: /api/admin must come BEFORE /api
-// The referral routes at /api use requireAuth middleware that would
-// intercept /api/admin/* requests and return 401 before admin handlers run.
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api', referralRoutes);
 
 // 404 handler

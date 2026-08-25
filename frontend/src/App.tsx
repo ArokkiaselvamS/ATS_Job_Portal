@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 // Authenticated layout & pages
 import AuthenticatedLayout from "./components/AuthenticatedLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AuthResumeBuilder from "./pages/dashboard/AuthResumeBuilder";
 import Connections from "./pages/dashboard/Connections";
@@ -16,6 +17,7 @@ import ExploreJobs from "./pages/dashboard/ExploreJobs";
 import JobApplications from "./pages/dashboard/Applications";
 import Services from "./pages/dashboard/Services";
 import Invite from "./pages/dashboard/Invite";
+import Profile from "./pages/dashboard/Profile";
 
 // Admin
 import { AdminAuthProvider } from "./hooks/useAdminAuth";
@@ -70,12 +72,13 @@ export default function App() {
         }
       >
         <Route path="/home" element={<DashboardHome />} />
-        <Route path="/resume-builder" element={isAuthenticated ? <AuthResumeBuilder /> : <Home />} />
+        <Route path="/resume-builder" element={<ErrorBoundary><AuthResumeBuilder /></ErrorBoundary>} />
         <Route path="/connections" element={<Connections />} />
         <Route path="/explore-jobs" element={<ExploreJobs />} />
         <Route path="/applications" element={<JobApplications />} />
         <Route path="/services" element={<Services />} />
         <Route path="/invite" element={<Invite />} />
+        <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
       </Route>
 
       {/* ── Admin Routes ── */}
