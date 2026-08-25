@@ -31,6 +31,34 @@ async function jobRequest<T = any>(
   }
 }
 
+// ─── Types ──────────────────────────────────────────────────
+
+export type ApplicationStatus = 
+  | 'SAVED' 
+  | 'APPLIED' 
+  | 'SCREENING' 
+  | 'INTERVIEW' 
+  | 'OFFER' 
+  | 'REJECTED' 
+  | 'ACCEPTED' 
+  | 'WITHDRAWN';
+
+export interface Application {
+  id: number;
+  userId: number;
+  jobId: number;
+  status: ApplicationStatus;
+  appliedAt: string;
+  updatedAt: string;
+  notes?: string;
+  resumeUrl?: string;
+  coverLetterUrl?: string;
+  applicationMethod?: string;
+  atsMatchScore?: number;
+  job?: BackendJob;
+  createdAt: string;
+}
+
 // ─── Jobs ─────────────────────────────────────────────────
 
 export interface BackendJob {
@@ -53,6 +81,7 @@ export interface BackendJob {
   source?: string;
   externalApplyUrl?: string;
   postedAt: string;
+  closingDate?: string;
   views?: number;
   company?: {
     id: number;
@@ -88,6 +117,27 @@ export const jobApi = {
 
   getApplication: (id: number) =>
     jobRequest(`/jobs/applications/${id}`),
+
+  addApplication: (data: { 
+    companyName: string; 
+    position: string; 
+    location?: string; 
+    jobType?: string; 
+    status?: ApplicationStatus;
+    notes?: string; 
+    resumeUrl?: string; 
+    appliedDate?: string;
+  }) =>
+    jobRequest(`/jobs/applications`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateApplicationStatus: (id: number, status: ApplicationStatus) =>
+    jobRequest(`/jobs/applications/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 };
 
 // ─── Matches ──────────────────────────────────────────────

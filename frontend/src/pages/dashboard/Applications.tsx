@@ -79,14 +79,14 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function getMatchScoreColor(score: number | null): string {
+function getMatchScoreColor(score: number | null | undefined): string {
   if (score === null || score === undefined) return "text-slate-400";
   if (score >= 85) return "text-emerald-600";
   if (score >= 75) return "text-amber-600";
   return "text-red-500";
 }
 
-function getMatchScoreBg(score: number | null): string {
+function getMatchScoreBg(score: number | null | undefined): string {
   if (score === null || score === undefined) return "bg-slate-50 text-slate-400";
   if (score >= 85) return "bg-emerald-50 text-emerald-600";
   if (score >= 75) return "bg-amber-50 text-amber-600";
@@ -567,7 +567,7 @@ export default function Applications() {
     setLoading(true);
     setError("");
     try {
-      const res = await jobApi.getApplications(1, 200);
+      const res = await jobApi.getApplications({ page: '1', limit: '200' });
       if (res.success && res.data) {
         setApplications(res.data.applications || []);
       } else {
@@ -972,7 +972,7 @@ export default function Applications() {
                       <span
                         className={`text-sm font-semibold ${getMatchScoreColor(app.atsMatchScore)}`}
                       >
-                        {app.atsMatchScore !== null ? `${app.atsMatchScore}%` : "—"}
+                        {app.atsMatchScore != null ? `${app.atsMatchScore}%` : "—"}
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
@@ -1055,7 +1055,7 @@ function KanbanCard({
             {app.job?.company?.name || "Unknown"}
           </p>
         </div>
-        {app.atsMatchScore !== null && (
+        {app.atsMatchScore != null && (
           <span
             className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${getMatchScoreBg(app.atsMatchScore)}`}
           >

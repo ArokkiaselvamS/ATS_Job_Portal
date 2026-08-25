@@ -178,7 +178,7 @@ export default function DashboardHome() {
                 </svg>
                 <div className="absolute flex flex-col items-center leading-none">
                   <span className="text-2xl font-extrabold text-slate-900">85</span>
-                  <span className="mt-1 text-[9px] font-bold text-emerald-600 whitespace-nowrap">Excellent Match</span>
+                  <span className="mt-1 text-[9px] font-bold text-emerald-600 whitespace-nowrap">Match</span>
                 </div>
               </div>
 

@@ -322,7 +322,7 @@ model Job {
   sourceType       String?
   sourceJobId      String?
   feedSourceId     Int?
-  feedSource       JobFeedSource?     @relation(fields: [feedSourceId], references: [id])
+  feedSource       JobFeedSource?     @relation(fields: [feedSourceId], references: [id], onDelete: SetNull)
   externalApplyUrl String?
   categoryId       Int?
   category         Category?          @relation(fields: [categoryId], references: [id])
@@ -434,7 +434,7 @@ model JobFeedSource {
 model JobFeedSyncLog {
   id            Int              @id @default(autoincrement())
   sourceId      Int
-  source        JobFeedSource    @relation(fields: [sourceId], references: [id])
+  source        JobFeedSource    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   startedAt     DateTime         @default(now())
   completedAt   DateTime?
   status        SyncStatus       @default(RUNNING)
@@ -456,7 +456,7 @@ model JobFeedSyncLog {
 model JobFeedError {
   id          Int           @id @default(autoincrement())
   sourceId    Int
-  source      JobFeedSource @relation(fields: [sourceId], references: [id])
+  source      JobFeedSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   jobId       String?
   jobTitle    String?
   errorMessage String
@@ -676,6 +676,8 @@ enum VerificationStatus {
 enum FeedSourceType {
   GREENHOUSE
   LEVER
+  REMOTIVE
+  ARBEITNOW
   CUSTOM_API
   RSS
   OTHER

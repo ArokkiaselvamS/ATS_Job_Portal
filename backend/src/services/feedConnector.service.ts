@@ -6,6 +6,7 @@ import {
   JobStatus,
   SyncStatus,
 } from '@prisma/client';
+import { decrypt } from '../utils/crypto';
 
 // ─── TYPES ────────────────────────────────────────────────
 
@@ -55,12 +56,38 @@ interface FeedConnector {
   fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]>;
 }
 
+function getAuthHeaders(source: FeedSourceRecord): Record<string, string> {
+  const headers: Record<string, string> = {};
+  
+  let credentials: string | null = null;
+  if (source.credentialsRef) {
+    try {
+      credentials = decrypt(source.credentialsRef);
+    } catch {
+      // If decryption fails, proceed without credentials
+    }
+  }
+  
+  if (credentials) {
+    if (source.authType === 'API_KEY') {
+      headers['Authorization'] = `Bearer ${credentials}`;
+    } else if (source.authType === 'BEARER') {
+      headers['Authorization'] = `Bearer ${credentials}`;
+    } else if (source.authType === 'BASIC') {
+      headers['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+    }
+  }
+  
+  return headers;
+}
+
 // ─── CONNECTORS ───────────────────────────────────────────
 
 class GreenhouseConnector implements FeedConnector {
   async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
     const url = `${source.endpoint}?content=true`;
-    const res = await fetch(url);
+    const headers = getAuthHeaders(source);
+    const res = await fetch(url, { headers });
 
     if (!res.ok) {
       throw new Error(`Greenhouse API returned ${res.status}: ${res.statusText}`);
@@ -119,9 +146,159 @@ class GreenhouseConnector implements FeedConnector {
   }
 }
 
+class LeverConnector implements FeedConnector {
+  async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
+    const headers = getAuthHeaders(source);
+    const res = await fetch(source.endpoint!, { headers });
+
+    if (!res.ok) {
+      throw new Error(`Lever API returned ${res.status}: ${res.statusText}`);
+    }
+
+    const data = await res.json() as any;
+    const jobs: any[] = Array.isArray(data) ? data : data.data ?? [];
+
+    return jobs.map((job) => this.normalizeJob(job, source.name));
+  }
+
+  private normalizeJob(job: any, companyName: string): NormalizedJob {
+    const locationName = job.categories?.location ?? job.location ?? '';
+    const workMode = this.inferWorkMode(locationName, job.categories?.commitment);
+
+    return {
+      externalJobId: String(job.id),
+      title: job.text ?? job.title ?? '',
+      description: job.descriptionPlain ?? job.description ?? '',
+      companyName,
+      companyLogo: undefined,
+      location: locationName || undefined,
+      city: undefined,
+      country: undefined,
+      workMode,
+      jobType: this.mapCommitment(job.categories?.commitment),
+      experienceLevel: job.categories?.experienceLevel,
+      salaryMin: undefined,
+      salaryMax: undefined,
+      salaryCurrency: undefined,
+      skills: job.categories?.team ? [job.categories.team] : [],
+      applyUrl: job.hostedUrl ?? job.applyUrl ?? '',
+      postedAt: job.createdAt ? new Date(job.createdAt) : new Date(),
+      expiresAt: undefined,
+    };
+  }
+
+  private inferWorkMode(location: string, commitment?: string): 'REMOTE' | 'HYBRID' | 'ONSITE' {
+    const lower = location.toLowerCase();
+    const commitLower = (commitment ?? '').toLowerCase();
+    if (lower.includes('remote') || commitLower.includes('remote')) return 'REMOTE';
+    if (lower.includes('hybrid') || commitLower.includes('hybrid')) return 'HYBRID';
+    return 'ONSITE';
+  }
+
+  private mapCommitment(commitment?: string): 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' {
+    const lower = (commitment ?? '').toLowerCase();
+    if (lower.includes('part')) return 'PART_TIME';
+    if (lower.includes('contract')) return 'CONTRACT';
+    if (lower.includes('intern')) return 'INTERNSHIP';
+    return 'FULL_TIME';
+  }
+}
+
+class RemotiveConnector implements FeedConnector {
+  async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
+    const headers = getAuthHeaders(source);
+    const res = await fetch(source.endpoint!, { headers });
+
+    if (!res.ok) {
+      throw new Error(`Remotive API returned ${res.status}: ${res.statusText}`);
+    }
+
+    const data = await res.json() as any;
+    const jobs: any[] = data.jobs ?? data ?? [];
+
+    return jobs.map((job) => this.normalizeJob(job));
+  }
+
+  private normalizeJob(job: any): NormalizedJob {
+    const locationStr = job.location ?? '';
+    const workMode = locationStr.toLowerCase().includes('remote') ? 'REMOTE' : 'ONSITE';
+
+    return {
+      externalJobId: String(job.id),
+      title: job.title ?? '',
+      description: job.description ?? '',
+      companyName: job.company_name ?? job.company ?? '',
+      companyLogo: job.company_logo ?? undefined,
+      location: locationStr || undefined,
+      city: undefined,
+      country: undefined,
+      workMode,
+      jobType: 'FULL_TIME',
+      experienceLevel: undefined,
+      salaryMin: job.salary_min ? parseFloat(job.salary_min) : undefined,
+      salaryMax: job.salary_max ? parseFloat(job.salary_max) : undefined,
+      salaryCurrency: job.salary_currency ?? 'USD',
+      skills: job.tags ?? job.categories ?? [],
+      applyUrl: job.url ?? job.apply_url ?? '',
+      postedAt: job.pubDate ? new Date(job.pubDate) : job.date ? new Date(job.date) : new Date(),
+      expiresAt: undefined,
+    };
+  }
+}
+
+class ArbeitnowConnector implements FeedConnector {
+  async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
+    const headers = getAuthHeaders(source);
+    const res = await fetch(source.endpoint!, { headers });
+
+    if (!res.ok) {
+      throw new Error(`Arbeitnow API returned ${res.status}: ${res.statusText}`);
+    }
+
+    const data = await res.json() as any;
+    const jobs: any[] = data.data ?? data ?? [];
+
+    return jobs.map((job) => this.normalizeJob(job));
+  }
+
+  private normalizeJob(job: any): NormalizedJob {
+    const locationStr = job.location ?? '';
+    const workModeStr = (job.remote ?? '').toString().toLowerCase();
+    const workMode = workModeStr === 'true' || workModeStr === 'yes' ? 'REMOTE' : 'ONSITE';
+
+    const jobTypeStr = (job.job_type ?? job.jobType ?? 'FULL_TIME').toString().toUpperCase().replace(/\s+/g, '_');
+    let jobType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' = 'FULL_TIME';
+    if (jobTypeStr === 'PART_TIME') jobType = 'PART_TIME';
+    else if (jobTypeStr === 'CONTRACT') jobType = 'CONTRACT';
+    else if (jobTypeStr === 'INTERNSHIP') jobType = 'INTERNSHIP';
+
+    return {
+      externalJobId: String(job.id ?? job.slug ?? ''),
+      title: job.title ?? '',
+      description: job.description ?? '',
+      companyName: job.company_name ?? job.company ?? '',
+      companyLogo: job.company_logo ?? undefined,
+      location: locationStr || undefined,
+      city: job.city ?? undefined,
+      country: job.country ?? undefined,
+      workMode,
+      jobType,
+      experienceLevel: job.experience_level ?? job.experienceLevel ?? undefined,
+      salaryMin: job.salary_min ? parseFloat(job.salary_min) : undefined,
+      salaryMax: job.salary_max ? parseFloat(job.salary_max) : undefined,
+      salaryCurrency: job.salary_currency ?? job.currency ?? 'EUR',
+      skills: job.tags ?? job.technologies ?? job.skills ?? [],
+      applyUrl: job.url ?? job.apply_url ?? job.link ?? '',
+      postedAt: job.posted_at ? new Date(job.posted_at) : job.created_at ? new Date(job.created_at) : new Date(),
+      expiresAt: job.expires_at ? new Date(job.expires_at) : undefined,
+    };
+  }
+}
+
 class GenericApiConnector implements FeedConnector {
   async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
-    const res = await fetch(source.endpoint!);
+    const headers = getAuthHeaders(source);
+    const res = await fetch(source.endpoint!, { headers });
 
     if (!res.ok) {
       throw new Error(`Generic API returned ${res.status}: ${res.statusText}`);
@@ -174,7 +351,8 @@ class GenericApiConnector implements FeedConnector {
 
 class RSSConnector implements FeedConnector {
   async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
-    const res = await fetch(source.endpoint!);
+    const headers = getAuthHeaders(source);
+    const res = await fetch(source.endpoint!, { headers });
 
     if (!res.ok) {
       throw new Error(`RSS feed returned ${res.status}: ${res.statusText}`);
@@ -265,6 +443,12 @@ function getConnector(sourceType: FeedSourceType): FeedConnector {
   switch (sourceType) {
     case 'GREENHOUSE':
       return new GreenhouseConnector();
+    case 'LEVER':
+      return new LeverConnector();
+    case 'REMOTIVE':
+      return new RemotiveConnector();
+    case 'ARBEITNOW':
+      return new ArbeitnowConnector();
     case 'CUSTOM_API':
       return new GenericApiConnector();
     case 'RSS':
@@ -280,6 +464,10 @@ function mapSourceToJobSource(sourceType: FeedSourceType): JobSource {
       return 'GREENHOUSE';
     case 'LEVER':
       return 'LEVER';
+    case 'REMOTIVE':
+      return 'OTHER';
+    case 'ARBEITNOW':
+      return 'OTHER';
     default:
       return 'OTHER';
   }

@@ -33,6 +33,8 @@ const AUTH_TYPES = ['NONE', 'API_KEY', 'OAUTH2', 'BASIC', 'BEARER'];
 const SOURCE_TYPE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   GREENHOUSE: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Greenhouse' },
   LEVER: { bg: 'bg-violet-100', text: 'text-violet-700', label: 'Lever' },
+  REMOTIVE: { bg: 'bg-teal-100', text: 'text-teal-700', label: 'Remotive' },
+  ARBEITNOW: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Arbeitnow' },
   ASHBY: { bg: 'bg-sky-100', text: 'text-sky-700', label: 'Ashby' },
   RSS: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'RSS' },
   CSV: { bg: 'bg-slate-100', text: 'text-slate-700', label: 'CSV' },
@@ -47,6 +49,8 @@ const DEFAULT_FORM = {
   authType: 'NONE',
   credentialsRef: '',
   syncFrequency: 'HOURLY',
+  testConnection: true,
+  initialSync: true,
 };
 
 export default function JobFeeds() {
@@ -71,8 +75,9 @@ export default function JobFeeds() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const submitData = editId ? form : { ...form, testConnection: form.testConnection, initialSync: form.initialSync };
     if (editId) await adminApi.jobFeeds.update(editId, form);
-    else await adminApi.jobFeeds.create(form);
+    else await adminApi.jobFeeds.create(submitData);
     setForm(DEFAULT_FORM);
     setEditId(null);
     setShowForm(false);
@@ -87,6 +92,8 @@ export default function JobFeeds() {
       authType: s.authType || 'NONE',
       credentialsRef: '',
       syncFrequency: s.syncFrequency,
+      testConnection: false,
+      initialSync: false,
     });
     setEditId(s.id);
     setShowForm(true);
@@ -194,6 +201,8 @@ export default function JobFeeds() {
               >
                 <option value="GREENHOUSE">Greenhouse</option>
                 <option value="LEVER">Lever</option>
+                <option value="REMOTIVE">Remotive</option>
+                <option value="ARBEITNOW">Arbeitnow</option>
                 <option value="ASHBY">Ashby</option>
                 <option value="CUSTOM_API">Custom API</option>
                 <option value="RSS">RSS</option>
@@ -268,6 +277,28 @@ export default function JobFeeds() {
                 </div>
               </div>
             )}
+            {!editId && (
+              <div className="sm:col-span-2 space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.testConnection}
+                    onChange={(e) => setForm({ ...form, testConnection: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-[#5b4fe8] focus:ring-[#5b4fe8]"
+                  />
+                  <span className="text-sm text-[#334155]">Test connection after creation</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.initialSync}
+                    onChange={(e) => setForm({ ...form, initialSync: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-[#5b4fe8] focus:ring-[#5b4fe8]"
+                  />
+                  <span className="text-sm text-[#334155]">Perform initial job synchronization</span>
+                </label>
+              </div>
+            )}
             <div className="sm:col-span-2 flex gap-2">
               <button
                 type="submit"
@@ -280,6 +311,8 @@ export default function JobFeeds() {
                 onClick={() => {
                   setShowForm(false);
                   setEditId(null);
+                  setForm(DEFAULT_FORM);
+                  setShowCredentials(false);
                 }}
                 className="px-4 py-2 rounded-lg border border-[#e2e8f0] text-sm text-[#64748b]"
               >

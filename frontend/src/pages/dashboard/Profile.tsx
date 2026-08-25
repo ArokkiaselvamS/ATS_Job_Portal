@@ -225,7 +225,7 @@ export default function Profile() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const addSectionItem = async (section: string, data: any) => {
+  const addSectionItem = async (section: string, data: Record<string, any>) => {
     setSaving(true);
     try {
       let res;
@@ -470,8 +470,8 @@ export default function Profile() {
               items={profile.education}
               newItem={newEducation}
               setNewItem={setNewEducation}
-              onAdd={(data) => addSectionItem('education', data)}
-              onDelete={(id) => deleteSectionItem('education', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('education', data)}
+              onDelete={(id: number) => deleteSectionItem('education', id)}
               saving={saving}
             />
           )}
@@ -483,8 +483,8 @@ export default function Profile() {
               candidateType={profile.candidateType}
               newItem={newExperience}
               setNewItem={setNewExperience}
-              onAdd={(data) => addSectionItem('experience', data)}
-              onDelete={(id) => deleteSectionItem('experience', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('experience', data)}
+              onDelete={(id: number) => deleteSectionItem('experience', id)}
               saving={saving}
             />
           )}
@@ -495,8 +495,8 @@ export default function Profile() {
               items={profile.skills}
               newItem={newSkill}
               setNewItem={setNewSkill}
-              onAdd={(data) => addSectionItem('skills', data)}
-              onDelete={(id) => deleteSectionItem('skills', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('skills', data)}
+              onDelete={(id: number) => deleteSectionItem('skills', id)}
               saving={saving}
             />
           )}
@@ -507,8 +507,8 @@ export default function Profile() {
               items={profile.projects}
               newItem={newProject}
               setNewItem={setNewProject}
-              onAdd={(data) => addSectionItem('projects', data)}
-              onDelete={(id) => deleteSectionItem('projects', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('projects', data)}
+              onDelete={(id: number) => deleteSectionItem('projects', id)}
               saving={saving}
             />
           )}
@@ -519,8 +519,8 @@ export default function Profile() {
               items={profile.certifications}
               newItem={newCertification}
               setNewItem={setNewCertification}
-              onAdd={(data) => addSectionItem('certifications', data)}
-              onDelete={(id) => deleteSectionItem('certifications', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('certifications', data)}
+              onDelete={(id: number) => deleteSectionItem('certifications', id)}
               saving={saving}
             />
           )}
@@ -531,8 +531,8 @@ export default function Profile() {
               items={profile.achievements}
               newItem={newAchievement}
               setNewItem={setNewAchievement}
-              onAdd={(data) => addSectionItem('achievements', data)}
-              onDelete={(id) => deleteSectionItem('achievements', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('achievements', data)}
+              onDelete={(id: number) => deleteSectionItem('achievements', id)}
               saving={saving}
             />
           )}
@@ -543,8 +543,8 @@ export default function Profile() {
               items={profile.languages}
               newItem={newLanguage}
               setNewItem={setNewLanguage}
-              onAdd={(data) => addSectionItem('languages', data)}
-              onDelete={(id) => deleteSectionItem('languages', id)}
+              onAdd={(data: Record<string, any>) => addSectionItem('languages', data)}
+              onDelete={(id: number) => deleteSectionItem('languages', id)}
               saving={saving}
             />
           )}

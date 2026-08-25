@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const adminAuth_1 = require("../../middleware/adminAuth");
+const adminJobs_controller_1 = require("../../controllers/admin/adminJobs.controller");
+const router = (0, express_1.Router)();
+router.use(adminAuth_1.requireAuth, adminAuth_1.requireSuperAdmin);
+router.get('/', adminJobs_controller_1.getJobs);
+router.get('/:id', adminJobs_controller_1.getJobById);
+router.patch('/:id/approve', adminJobs_controller_1.approveJob);
+router.patch('/:id/reject', adminJobs_controller_1.rejectJob);
+router.patch('/:id/suspend', adminJobs_controller_1.suspendJob);
+router.patch('/:id/pause', adminJobs_controller_1.pauseJob);
+router.patch('/:id/resume', adminJobs_controller_1.resumeJob);
+router.patch('/:id/close', adminJobs_controller_1.closeJob);
+exports.default = router;

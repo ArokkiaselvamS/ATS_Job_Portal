@@ -8,6 +8,10 @@ const zod_1 = require("zod");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const password_1 = require("../utils/password");
 const jwt_1 = require("../utils/jwt");
+function generateReferralCode(firstName, lastName, userId) {
+    const base = (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
+    return `${base}${String(userId).padStart(4, '0')}`;
+}
 const registerSchema = zod_1.z.object({
     firstName: zod_1.z.string().min(2),
     lastName: zod_1.z.string().min(2),
@@ -34,16 +38,20 @@ const register = async (req, res, next) => {
                 passwordHash: hashedPassword,
                 phone: data.phone,
                 role: 'JOB_SEEKER',
+                referralCode: '',
                 profile: {
                     create: {},
                 },
             },
         });
+        const referralCode = generateReferralCode(data.firstName, data.lastName, user.id);
+        await prisma_1.default.user.update({ where: { id: user.id }, data: { referralCode } });
         const token = (0, jwt_1.generateToken)({ userId: user.id, role: user.role });
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(201).json({
@@ -55,6 +63,7 @@ const register = async (req, res, next) => {
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
+                referralCode,
             },
         });
     }
@@ -91,6 +100,7 @@ const login = async (req, res, next) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.json({
@@ -102,6 +112,7 @@ const login = async (req, res, next) => {
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
+                referralCode: user.referralCode,
             },
         });
     }
@@ -115,6 +126,7 @@ const logout = (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
+        path: '/',
     });
     res.json({ success: true, message: 'Logout successful' });
 };
@@ -131,6 +143,7 @@ const getMe = async (req, res, next) => {
                 email: true,
                 role: true,
                 profileImage: true,
+                referralCode: true,
                 isActive: true,
                 createdAt: true,
             },

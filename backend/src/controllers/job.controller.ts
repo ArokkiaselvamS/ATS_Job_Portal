@@ -413,3 +413,110 @@ export const getApplicationById = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+export const addApplication = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const { companyName, position, location, jobType, status, notes, resumeUrl, appliedDate } = req.body;
+
+    // Create a job entry for manual applications
+    let job = await prisma.job.findFirst({
+      where: {
+        title: position,
+        companyName: companyName,
+      },
+    });
+
+    if (!job) {
+      // Create a company entry
+      const company = await prisma.company.findFirst({
+        where: { name: { equals: companyName, mode: 'insensitive' } },
+      }) || await prisma.company.create({
+        data: { name: companyName, verificationStatus: 'PENDING' },
+      });
+
+      job = await prisma.job.create({
+        data: {
+          title: position,
+          description: '',
+          companyId: company.id,
+          companyName: companyName,
+          location: location || '',
+          jobType: (jobType as any) || 'FULL_TIME',
+          workMode: 'ONSITE',
+          status: 'ACTIVE',
+          source: 'INTERNAL',
+          postedAt: appliedDate ? new Date(appliedDate) : new Date(),
+        },
+      });
+    }
+
+    const existingApplication = await prisma.application.findUnique({
+      where: { userId_jobId: { userId, jobId: job.id } },
+    });
+
+    if (existingApplication) {
+      res.status(400).json({ success: false, message: 'You have already applied to this job' });
+      return;
+    }
+
+    const application = await prisma.application.create({
+      data: {
+        userId,
+        jobId: job.id,
+        status: (status as any) || 'APPLIED',
+        notes: notes || null,
+        resumeUrl: resumeUrl || null,
+        applicationMethod: 'manual',
+        appliedAt: appliedDate ? new Date(appliedDate) : new Date(),
+      },
+      include: {
+        job: {
+          include: {
+            company: { select: { id: true, name: true, logo: true } },
+          },
+        },
+      },
+    });
+
+    res.status(201).json({ success: true, data: application });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const applicationId = parseInt(String(req.params.id), 10);
+    const { status } = req.body;
+
+    if (isNaN(applicationId)) {
+      res.status(400).json({ success: false, message: 'Invalid application ID' });
+      return;
+    }
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!application) {
+      res.status(404).json({ success: false, message: 'Application not found' });
+      return;
+    }
+
+    if (application.userId !== userId) {
+      res.status(403).json({ success: false, message: 'Access denied' });
+      return;
+    }
+
+    const updated = await prisma.application.update({
+      where: { id: applicationId },
+      data: { status: status as any },
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
