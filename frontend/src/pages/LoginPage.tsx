@@ -8,6 +8,19 @@ import ForgotPasswordModal from "../../../aescion-login/src/components/ForgotPas
 import Toast from "../../../aescion-login/src/components/Toast.jsx";
 import "../styles/auth-scoped.css";
 
+function getRedirectPath(role: string): string {
+  switch (role) {
+    case 'COMPANY_ADMIN':
+      return '/company-admin/dashboard';
+    case 'SUPER_ADMIN':
+    case 'ADMIN':
+      return '/admin/dashboard';
+    case 'JOB_SEEKER':
+    default:
+      return '/home';
+  }
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -48,7 +61,8 @@ export default function LoginPage() {
               onNotify={notify}
               onLoginSuccess={(userData: any) => {
                 login(userData);
-                navigate("/home");
+                const redirectPath = getRedirectPath(userData.role);
+                navigate(redirectPath);
               }}
             />
           </AnimatePresence>

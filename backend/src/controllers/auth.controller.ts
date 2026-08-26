@@ -102,6 +102,29 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
+    // Check company verification for COMPANY_ADMIN users
+    if (user.role === 'COMPANY_ADMIN') {
+      const companyAdmin = await prisma.companyAdmin.findFirst({
+        where: { userId: user.id },
+        include: { company: true },
+      });
+
+      if (!companyAdmin || !companyAdmin.company) {
+        res.status(403).json({ success: false, message: 'Company not found. Access denied.' });
+        return;
+      }
+
+      if (companyAdmin.company.verificationStatus !== 'VERIFIED') {
+        res.status(403).json({ success: false, message: `Company is ${companyAdmin.company.verificationStatus.toLowerCase()}. Access denied.` });
+        return;
+      }
+
+      if (companyAdmin.company.isSuspended) {
+        res.status(403).json({ success: false, message: 'Company is suspended. Access denied.' });
+        return;
+      }
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },

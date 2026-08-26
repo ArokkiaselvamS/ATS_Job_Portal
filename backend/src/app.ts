@@ -10,6 +10,8 @@ import adminRoutes from './routes/admin/index';
 import profileRoutes from './routes/profile.routes';
 import jobRoutes from './routes/job.routes';
 import matchRoutes from './routes/match.routes';
+import companyRoutes from './routes/company/company.routes';
+import companyAdminRoutes from './routes/company-admin/companyAdmin.routes';
 
 const app: Application = express();
 
@@ -32,6 +34,8 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Routes — ORDER MATTERS: /api/admin must come BEFORE /api
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/company', companyRoutes);
+app.use('/api/company-admin', companyAdminRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/matches', matchRoutes);

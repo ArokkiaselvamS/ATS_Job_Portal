@@ -65,9 +65,9 @@ export default function Hero() {
               <span>Resume Builder</span>
             </Link>
 
-            {/* Option 3: Companies (Renamed from Employers Login) */}
+            {/* Option 3: Companies (Navigate to Company Registration) */}
             <Link
-              to="/employers"
+              to="/company/register"
               className="group flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-[#F96302] hover:bg-orange-50/60 px-3.5 py-2.5 rounded-xl sm:rounded-full transition duration-200 whitespace-nowrap"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-50 text-[#F96302] group-hover:bg-[#F96302] group-hover:text-white transition duration-200">
