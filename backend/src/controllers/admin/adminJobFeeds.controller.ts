@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../../utils/prisma';
 import { createAuditLog } from '../../services/audit.service';
+import { fetchAndNormalizeJobs, syncFeedSource } from '../../services/feedConnector.service';
+import { encrypt, decrypt } from '../../utils/crypto';
 
 export const getFeedSources = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -25,12 +27,99 @@ export const getFeedSourceById = async (req: Request, res: Response, next: NextF
 
 export const createFeedSource = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { name, sourceType, endpoint, authType, credentialsRef, syncFrequency } = req.body;
+    const { name, sourceType, endpoint, authType, credentialsRef, syncFrequency, testConnection, initialSync } = req.body;
+    
+    // Encrypt credentials if provided
+    const encryptedCredentials = credentialsRef ? encrypt(credentialsRef) : null;
+    
     const source = await prisma.jobFeedSource.create({
-      data: { name, sourceType, endpoint, authType: authType || 'NONE', credentialsRef, syncFrequency: syncFrequency || 'HOURLY' },
+      data: { 
+        name, 
+        sourceType, 
+        endpoint, 
+        authType: authType || 'NONE', 
+        credentialsRef: encryptedCredentials, 
+        syncFrequency: syncFrequency || 'HOURLY' 
+      },
     });
     await createAuditLog({ adminId: req.user!.userId, action: 'FEED_SOURCE_CREATED', entityType: 'JobFeedSource', entityId: source.id, newValue: { name, sourceType } });
-    res.status(201).json({ success: true, data: source });
+    
+    // Test connection if requested
+    if (testConnection && endpoint) {
+      let credentials = null;
+      if (encryptedCredentials) {
+        try {
+          credentials = decrypt(encryptedCredentials);
+        } catch {
+          // Ignore decryption errors
+        }
+      }
+      
+      const headers: Record<string, string> = {};
+      if (credentials) {
+        if (authType === 'API_KEY') headers['Authorization'] = `Bearer ${credentials}`;
+        else if (authType === 'BEARER') headers['Authorization'] = `Bearer ${credentials}`;
+        else if (authType === 'BASIC') headers['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+      }
+      
+      try {
+        const response = await fetch(endpoint, { 
+          method: 'GET',
+          headers,
+          signal: AbortSignal.timeout(10000)
+        });
+        
+        if (!response.ok) {
+          const safeSource = { ...source, credentialsRef: undefined };
+          res.status(201).json({ 
+            success: true, 
+            data: safeSource,
+            warning: `Source created but connection test failed: ${response.status} ${response.statusText}`
+          });
+          return;
+        }
+      } catch (testError: any) {
+        const safeSource = { ...source, credentialsRef: undefined };
+        res.status(201).json({ 
+          success: true, 
+          data: safeSource,
+          warning: `Source created but connection test failed: ${testError.message}`
+        });
+        return;
+      }
+    }
+    
+    // Perform initial sync if requested
+    if (initialSync && endpoint) {
+      // Update source to active
+      await prisma.jobFeedSource.update({
+        where: { id: source.id },
+        data: { isActive: true }
+      });
+      
+      // Start sync in background
+      syncFeedSource(source.id).then(async (result) => {
+        const totalJobs = await prisma.job.count({
+          where: { feedSourceId: source.id, status: 'ACTIVE' },
+        });
+        await prisma.jobFeedSource.update({
+          where: { id: source.id },
+          data: {
+            totalJobs,
+            syncErrorCount: result.errors.length > 0 ? { increment: 1 } : { set: 0 },
+          },
+        });
+      }).catch(async (err: any) => {
+        await prisma.jobFeedSource.update({
+          where: { id: source.id },
+          data: { syncErrorCount: { increment: 1 } },
+        });
+      });
+    }
+    
+    // Return source without credentials
+    const safeSource = { ...source, credentialsRef: undefined };
+    res.status(201).json({ success: true, data: safeSource });
   } catch (error) { next(error); }
 };
 
@@ -42,13 +131,16 @@ export const updateFeedSource = async (req: Request, res: Response, next: NextFu
     if (sourceType !== undefined) data.sourceType = sourceType;
     if (endpoint !== undefined) data.endpoint = endpoint;
     if (authType !== undefined) data.authType = authType;
-    if (credentialsRef !== undefined) data.credentialsRef = credentialsRef;
+    if (credentialsRef !== undefined) data.credentialsRef = encrypt(credentialsRef);
     if (syncFrequency !== undefined) data.syncFrequency = syncFrequency;
     if (isActive !== undefined) data.isActive = isActive;
 
     const source = await prisma.jobFeedSource.update({ where: { id: parseInt(String(req.params.id)) }, data });
     await createAuditLog({ adminId: req.user!.userId, action: 'FEED_SOURCE_UPDATED', entityType: 'JobFeedSource', entityId: source.id, newValue: data });
-    res.json({ success: true, data: source });
+    
+    // Return source without credentials
+    const safeSource = { ...source, credentialsRef: undefined };
+    res.json({ success: true, data: safeSource });
   } catch (error) { next(error); }
 };
 
@@ -65,8 +157,68 @@ export const testFeedConnection = async (req: Request, res: Response, next: Next
     const source = await prisma.jobFeedSource.findUnique({ where: { id: parseInt(String(req.params.id)) } });
     if (!source) { res.status(404).json({ success: false, message: 'Feed source not found' }); return; }
 
-    res.json({ success: true, message: 'Connection test successful', data: { sourceId: source.id, sourceName: source.name, endpoint: source.endpoint } });
-  } catch (error) { next(error); }
+    if (!source.endpoint) {
+      res.status(400).json({ success: false, message: 'No endpoint configured for this feed source' });
+      return;
+    }
+
+    // Decrypt credentials if present
+    let credentials = null;
+    if (source.credentialsRef) {
+      try {
+        credentials = decrypt(source.credentialsRef);
+      } catch {
+        res.json({ success: false, message: 'Failed to decrypt credentials' });
+        return;
+      }
+    }
+
+    // Prepare headers for authentication
+    const headers: Record<string, string> = {};
+    if (credentials) {
+      if (source.authType === 'API_KEY') {
+        headers['Authorization'] = `Bearer ${credentials}`;
+      } else if (source.authType === 'BEARER') {
+        headers['Authorization'] = `Bearer ${credentials}`;
+      } else if (source.authType === 'BASIC') {
+        headers['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+      }
+    }
+
+    const response = await fetch(source.endpoint, { 
+      method: 'GET',
+      headers,
+      signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+      res.json({ 
+        success: false, 
+        message: `Connection failed: ${response.status} ${response.statusText}` 
+      });
+      return;
+    }
+
+    // Try to parse response to verify it's valid JSON
+    try {
+      await response.json();
+      res.json({ success: true, message: 'Connection successful' });
+    } catch {
+      // Try text response
+      const text = await response.text();
+      if (text.trim().startsWith('<') || text.trim().startsWith('<?xml')) {
+        res.json({ success: true, message: 'Connection successful (RSS/XML feed)' });
+      } else {
+        res.json({ success: false, message: 'Response is not valid JSON or RSS/XML' });
+      }
+    }
+  } catch (error: any) {
+    if (error.name === 'TimeoutError') {
+      res.json({ success: false, message: 'Connection timed out' });
+    } else {
+      res.json({ success: false, message: `Connection failed: ${error.message}` });
+    }
+  }
 };
 
 export const syncFeedNow = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -74,12 +226,61 @@ export const syncFeedNow = async (req: Request, res: Response, next: NextFunctio
     const source = await prisma.jobFeedSource.findUnique({ where: { id: parseInt(String(req.params.id)) } });
     if (!source) { res.status(404).json({ success: false, message: 'Feed source not found' }); return; }
 
+    if (!source.isActive) {
+      res.status(400).json({ success: false, message: 'Feed source is not active' });
+      return;
+    }
+
     const syncLog = await prisma.jobFeedSyncLog.create({
       data: { sourceId: source.id, status: 'RUNNING' },
     });
 
     await prisma.jobFeedSource.update({ where: { id: source.id }, data: { lastSyncAt: new Date() } });
     await createAuditLog({ adminId: req.user!.userId, action: 'FEED_SYNC_TRIGGERED', entityType: 'JobFeedSource', entityId: source.id });
+
+    // Start sync in background
+    syncFeedSource(source.id).then(async (result) => {
+      await prisma.jobFeedSyncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          completedAt: new Date(),
+          status: result.errors.length > 0 ? 'PARTIAL' : 'COMPLETED',
+          fetchedCount: result.fetched,
+          newCount: result.new,
+          updatedCount: result.updated,
+          expiredCount: result.expired,
+          duplicateCount: result.duplicates,
+          errorCount: result.errors.length,
+          errorDetails: result.errors.length > 0 ? result.errors.join('\n') : null,
+        },
+      });
+
+      const totalJobs = await prisma.job.count({
+        where: { feedSourceId: source.id, status: 'ACTIVE' },
+      });
+
+      await prisma.jobFeedSource.update({
+        where: { id: source.id },
+        data: {
+          totalJobs,
+          syncErrorCount: result.errors.length > 0 ? { increment: 1 } : { set: 0 },
+        },
+      });
+    }).catch(async (err: any) => {
+      await prisma.jobFeedSyncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          completedAt: new Date(),
+          status: 'FAILED',
+          errorCount: 1,
+          errorDetails: err.message,
+        },
+      });
+      await prisma.jobFeedSource.update({
+        where: { id: source.id },
+        data: { syncErrorCount: { increment: 1 } },
+      });
+    });
 
     res.json({ success: true, message: 'Sync started', data: { syncLogId: syncLog.id } });
   } catch (error) { next(error); }

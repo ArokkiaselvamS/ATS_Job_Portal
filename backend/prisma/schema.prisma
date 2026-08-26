@@ -306,7 +306,10 @@ model Job {
   description      String
   companyId        Int
   company          Company            @relation(fields: [companyId], references: [id])
+  companyName      String?
   location         String?
+  city             String?
+  country          String?
   jobType          JobType
   workMode         WorkMode
   experienceLevel  String?
@@ -318,6 +321,8 @@ model Job {
   source           JobSource          @default(INTERNAL)
   sourceType       String?
   sourceJobId      String?
+  feedSourceId     Int?
+  feedSource       JobFeedSource?     @relation(fields: [feedSourceId], references: [id], onDelete: SetNull)
   externalApplyUrl String?
   categoryId       Int?
   category         Category?          @relation(fields: [categoryId], references: [id])
@@ -329,34 +334,41 @@ model Job {
   views            Int                @default(0)
   postedAt         DateTime           @default(now())
   closingDate      DateTime?
+  expiresAt        DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
   applications     Application[]
   savedJobs        SavedJob[]
 
-  @@index([source, sourceJobId])
+  @@unique([source, sourceJobId])
   @@index([status])
   @@index([companyId])
   @@index([categoryId])
+  @@index([feedSourceId])
+  @@index([postedAt])
+  @@index([city])
 }
 
 // ─── APPLICATION ─────────────────────────────────────────
 
 model Application {
-  id             Int               @id @default(autoincrement())
-  userId         Int
-  user           User              @relation(fields: [userId], references: [id])
-  jobId          Int
-  job            Job               @relation(fields: [jobId], references: [id])
-  status         ApplicationStatus @default(APPLIED)
-  appliedAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  notes          String?
-  resumeUrl      String?
-  coverLetterUrl String?
-  createdAt      DateTime          @default(now())
+  id               Int               @id @default(autoincrement())
+  userId           Int
+  user             User              @relation(fields: [userId], references: [id])
+  jobId            Int
+  job              Job               @relation(fields: [jobId], references: [id])
+  status           ApplicationStatus @default(APPLIED)
+  appliedAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  notes            String?
+  resumeUrl        String?
+  coverLetterUrl   String?
+  applicationMethod String?          @default("quick_apply")
+  atsMatchScore    Int?
+  createdAt        DateTime          @default(now())
 
+  @@unique([userId, jobId])
   @@index([status])
   @@index([jobId])
   @@index([userId])
@@ -412,6 +424,7 @@ model JobFeedSource {
 
   syncLogs         JobFeedSyncLog[]
   errors           JobFeedError[]
+  jobs             Job[]
 
   @@index([isActive])
 }
@@ -421,7 +434,7 @@ model JobFeedSource {
 model JobFeedSyncLog {
   id            Int              @id @default(autoincrement())
   sourceId      Int
-  source        JobFeedSource    @relation(fields: [sourceId], references: [id])
+  source        JobFeedSource    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   startedAt     DateTime         @default(now())
   completedAt   DateTime?
   status        SyncStatus       @default(RUNNING)
@@ -443,7 +456,7 @@ model JobFeedSyncLog {
 model JobFeedError {
   id          Int           @id @default(autoincrement())
   sourceId    Int
-  source      JobFeedSource @relation(fields: [sourceId], references: [id])
+  source      JobFeedSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   jobId       String?
   jobTitle    String?
   errorMessage String
@@ -663,6 +676,8 @@ enum VerificationStatus {
 enum FeedSourceType {
   GREENHOUSE
   LEVER
+  REMOTIVE
+  ARBEITNOW
   CUSTOM_API
   RSS
   OTHER
@@ -677,6 +692,7 @@ enum FeedAuthType {
 }
 
 enum SyncFrequency {
+  EVERY_10_MIN
   EVERY_15_MIN
   EVERY_30_MIN
   HOURLY

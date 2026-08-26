@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const adminAuth_1 = require("../../middleware/adminAuth");
+const adminSkills_controller_1 = require("../../controllers/admin/adminSkills.controller");
+const router = (0, express_1.Router)();
+router.use(adminAuth_1.requireAuth, adminAuth_1.requireSuperAdmin);
+router.get('/', adminSkills_controller_1.getSkills);
+router.post('/', adminSkills_controller_1.createSkill);
+router.patch('/:id', adminSkills_controller_1.updateSkill);
+router.post('/merge', adminSkills_controller_1.mergeSkills);
+exports.default = router;

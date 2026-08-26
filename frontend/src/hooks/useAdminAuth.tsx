@@ -47,10 +47,13 @@ export function AdminAuthProvider({ children }: { children?: ReactNode }) {
     try {
       const res: any = await adminApi.auth.login(email, password);
       if (res.success) {
+        if (res.data?.role && res.data.role !== 'SUPER_ADMIN') {
+          return { success: false, message: 'Access denied. Authorized Super Administrators only.' };
+        }
         setAdmin(res.data);
         return { success: true };
       }
-      return { success: false, message: res.message };
+      return { success: false, message: res.message || 'Invalid admin credentials' };
     } catch (err: any) {
       return { success: false, message: err.message || 'Login failed' };
     }

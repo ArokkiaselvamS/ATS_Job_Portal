@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.routes';
 import referralRoutes from './routes/referral.routes';
 import adminRoutes from './routes/admin/index';
 import profileRoutes from './routes/profile.routes';
+import jobRoutes from './routes/job.routes';
+import matchRoutes from './routes/match.routes';
 
 const app: Application = express();
 
@@ -31,6 +33,8 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/matches', matchRoutes);
 app.use('/api', referralRoutes);
 
 // 404 handler

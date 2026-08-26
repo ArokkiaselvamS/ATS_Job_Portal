@@ -16,20 +16,20 @@ import {
   SlidersHorizontal,
   TrendingUp,
   GraduationCap,
-  FolderOpen,
-  Award,
   Target,
-  RefreshCw,
   BarChart3,
+  Send,
+  X,
 } from "lucide-react";
-import { profileApi } from "../../services/profileApi";
 import {
-  calculateAllMatches,
-  JobMatchResult,
-  MatchJob,
-} from "../../services/matchService";
+  matchApi,
+  jobApi,
+  BackendMatchResult,
+  BackendJob,
+} from "../../services/jobApi";
+import { profileApi } from "../../services/profileApi";
 
-// ── Types ──
+// ── Profile shape (for strength indicator) ──
 interface ProfileData {
   targetJobTitles?: string[];
   professionalHeadline?: string;
@@ -71,23 +71,172 @@ interface ProfileData {
     certificationName?: string;
     issuingOrganization?: string;
   }[];
+  resumeUrl?: string;
 }
+
+// ── Enriched match (backend match + job data merged) ──
+interface EnrichedMatch {
+  jobId: number;
+  matchScore: number;
+  breakdown: BackendMatchResult["breakdown"];
+  matchingSkills: string[];
+  missingSkills: string[];
+  reasons: string[];
+  job: BackendJob;
+}
+
+// ── Display-ready match for MatchCard ──
+interface DisplayMatch {
+  job: {
+    id: number;
+    title: string;
+    company: string;
+    location: string;
+    workMode: string;
+    jobType: string;
+    salaryMin: number;
+    salaryMax: number;
+    salaryCurrency: string;
+    skills: string[];
+    description: string;
+    responsibilities: string[];
+    postedAt: string;
+    isFeatured: boolean;
+    externalApplyUrl?: string;
+  };
+  match: {
+    skills: number;
+    experience: number;
+    education: number;
+    projects: number;
+    certifications: number;
+    location: number;
+    overall: number;
+  };
+  matchingSkills: string[];
+  missingSkills: string[];
+  whyThisJob: string[];
+  missingGaps: string[];
+}
+
+// ── Helpers ──
+
+function formatWorkMode(mode: string): string {
+  switch (mode) {
+    case "ONSITE":
+      return "On-site";
+    case "HYBRID":
+      return "Hybrid";
+    case "REMOTE":
+      return "Remote";
+    default:
+      return mode;
+  }
+}
+
+function formatJobType(type: string): string {
+  switch (type) {
+    case "FULL_TIME":
+      return "Full Time";
+    case "PART_TIME":
+      return "Part Time";
+    case "CONTRACT":
+      return "Contract";
+    case "INTERNSHIP":
+      return "Internship";
+    default:
+      return type;
+  }
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks}w ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
+
+function transformToDisplayMatch(
+  enriched: EnrichedMatch,
+): DisplayMatch {
+  const { job, matchScore, breakdown, matchingSkills, missingSkills, reasons } =
+    enriched;
+
+  const companyName =
+    job.companyName || job.company?.name || "Unknown Company";
+
+  return {
+    job: {
+      id: job.id,
+      title: job.title,
+      company: companyName,
+      location: job.location || job.city || "Remote",
+      workMode: formatWorkMode(job.workMode),
+      jobType: formatJobType(job.jobType),
+      salaryMin: job.salaryMin ?? 0,
+      salaryMax: job.salaryMax ?? 0,
+      salaryCurrency: job.salaryCurrency || "INR",
+      skills: job.skills || [],
+      description: job.description || "",
+      responsibilities: [],
+      postedAt: formatTimeAgo(job.postedAt),
+      isFeatured: false,
+      externalApplyUrl: job.externalApplyUrl,
+    },
+    match: {
+      skills: breakdown.skills,
+      experience: breakdown.experience,
+      education: breakdown.education,
+      projects: 0,
+      certifications: 0,
+      location: breakdown.location,
+      overall: matchScore,
+    },
+    matchingSkills,
+    missingSkills,
+    whyThisJob: reasons.length > 0
+      ? reasons
+      : ["Overall profile compatibility meets the threshold"],
+    missingGaps:
+      missingSkills.length > 0
+        ? missingSkills
+        : experienceBelowThreshold(breakdown.experience)
+          ? ["Additional experience may strengthen your application"]
+          : [],
+  };
+}
+
+function experienceBelowThreshold(score: number): boolean {
+  return score < 60;
+}
+
+// ── Constants ──
 
 const SCORE_TABS = [
   { id: "all", label: "All Matches" },
   { id: "95-99", label: "95-99%" },
   { id: "90-94", label: "90-94%" },
   { id: "80-89", label: "80-89%" },
-  { id: "75-79", label: "75-79%" },
+  { id: "70-79", label: "70-79%" },
 ];
 
 const CATEGORY_FILTERS = [
   { id: "skills", label: "Skills", icon: Target },
   { id: "experience", label: "Experience", icon: Briefcase },
   { id: "education", label: "Education", icon: GraduationCap },
-  { id: "projects", label: "Projects", icon: FolderOpen },
   { id: "location", label: "Location", icon: MapPin },
-  { id: "certifications", label: "Certifications", icon: Award },
 ];
 
 const SORT_OPTIONS = [
@@ -97,10 +246,13 @@ const SORT_OPTIONS = [
   { id: "salary-low", label: "Salary: Low to High" },
 ];
 
+// ── Main Component ──
+
 export default function Matches() {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [matches, setMatches] = useState<JobMatchResult[]>([]);
+  const [enrichedMatches, setEnrichedMatches] = useState<EnrichedMatch[]>([]);
+  const [hasProfile, setHasProfile] = useState(true);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [activeScoreTab, setActiveScoreTab] = useState("all");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("match");
@@ -108,42 +260,89 @@ export default function Matches() {
   const [savedJobs, setSavedJobs] = useState<Set<number>>(new Set());
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
 
-  // Fetch profile and calculate matches
+  // Quick Apply state
+  const [quickApplyJob, setQuickApplyJob] = useState<DisplayMatch["job"] | null>(null);
+  const [quickApplyNotes, setQuickApplyNotes] = useState("");
+  const [quickApplySubmitting, setQuickApplySubmitting] = useState(false);
+
+  // ── Data fetching ──
   useEffect(() => {
-    const fetchAndMatch = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+
+      // Fetch profile for strength indicator and empty-state check
+      let profileData: ProfileData | null = null;
       try {
-        setLoading(true);
-        const res = await profileApi.get();
-        if (res.success && res.data) {
-          const p = res.data as ProfileData;
-          setProfile(p);
-          const results = calculateAllMatches(p);
-          setMatches(results);
+        const profileRes = await profileApi.get();
+        if (profileRes.success && profileRes.data) {
+          profileData = profileRes.data as ProfileData;
+          setProfile(profileData);
+        } else {
+          setHasProfile(false);
         }
       } catch {
-        // silent
+        setHasProfile(false);
+      }
+
+      // Fetch matches from backend
+      try {
+        const matchRes = await matchApi.getMatches();
+        if (
+          !matchRes.success ||
+          !matchRes.data?.matches ||
+          matchRes.data.matches.length === 0
+        ) {
+          setEnrichedMatches([]);
+          setLoading(false);
+          return;
+        }
+
+        const backendMatches = matchRes.data.matches;
+
+        // Fetch job details for each matched job in parallel
+        const results = await Promise.allSettled(
+          backendMatches.map(async (m) => {
+            const jobRes = await jobApi.getById(m.jobId);
+            if (jobRes.success && jobRes.data) {
+              return { ...m, job: jobRes.data } as EnrichedMatch;
+            }
+            return null;
+          }),
+        );
+
+        const enriched = results
+          .filter(
+            (r): r is PromiseFulfilledResult<EnrichedMatch> =>
+              r.status === "fulfilled" && r.value !== null,
+          )
+          .map((r) => r.value);
+
+        setEnrichedMatches(enriched);
+      } catch {
+        setEnrichedMatches([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchAndMatch();
+
+    fetchData();
   }, []);
 
-  // Filter and sort matches
-  const filteredMatches = useMemo(() => {
-    let result = [...matches];
+  // ── Filter and sort ──
+  const displayMatches = useMemo(() => {
+    let results = enrichedMatches.map(transformToDisplayMatch);
 
     // Score range filter
     if (activeScoreTab !== "all") {
       const [min, max] = activeScoreTab.split("-").map(Number);
-      result = result.filter(
+      results = results.filter(
         (r) => r.match.overall >= min && r.match.overall <= max,
       );
     }
 
-    // Category highlight filter (sort by specific dimension)
+    // Category filter
     if (activeCategory) {
-      result = result.filter((r) => {
+      results = results.filter((r) => {
         const score =
           r.match[activeCategory as keyof typeof r.match] ?? 0;
         return score >= 60;
@@ -153,7 +352,7 @@ export default function Matches() {
     // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(
+      results = results.filter(
         (r) =>
           r.job.title.toLowerCase().includes(q) ||
           r.job.company.toLowerCase().includes(q) ||
@@ -165,26 +364,65 @@ export default function Matches() {
     // Sort
     switch (sortBy) {
       case "recent":
-        // Keep original order (already sorted by match %)
         break;
       case "salary-high":
-        result.sort((a, b) => b.job.salaryMax - a.job.salaryMax);
+        results.sort((a, b) => b.job.salaryMax - a.job.salaryMax);
         break;
       case "salary-low":
-        result.sort((a, b) => a.job.salaryMin - b.job.salaryMin);
+        results.sort((a, b) => a.job.salaryMin - b.job.salaryMin);
         break;
       default:
-        result.sort((a, b) => b.match.overall - a.match.overall);
+        results.sort((a, b) => b.match.overall - a.match.overall);
     }
 
-    return result;
-  }, [matches, activeScoreTab, activeCategory, sortBy, searchQuery]);
+    return results;
+  }, [enrichedMatches, activeScoreTab, activeCategory, sortBy, searchQuery]);
 
+  // ── Quick Apply ──
+  const handleQuickApply = async () => {
+    if (!quickApplyJob) return;
+    setQuickApplySubmitting(true);
+    try {
+      await jobApi.apply(quickApplyJob.id, {
+        resumeUrl: profile?.resumeUrl || undefined,
+        notes: quickApplyNotes || undefined,
+      });
+      setQuickApplyJob(null);
+      setQuickApplyNotes("");
+    } catch {
+      // silent
+    } finally {
+      setQuickApplySubmitting(false);
+    }
+  };
+
+  // ── Profile strength ──
+  const profileCompletionPct = (() => {
+    if (!profile) return 0;
+    let filled = 0;
+    let total = 8;
+    if (profile.skills?.length) filled++;
+    if (profile.education?.length) filled++;
+    if (profile.experience?.length) filled++;
+    if (profile.projects?.length) filled++;
+    if (profile.certifications?.length) filled++;
+    if (profile.targetJobTitles?.length) filled++;
+    if (profile.professionalHeadline) filled++;
+    if (profile.location) filled++;
+    return Math.round((filled / total) * 100);
+  })();
+
+  // ── Toggle helpers ──
   const toggleSave = (jobId: number) => {
     setSavedJobs((prev) => {
       const next = new Set(prev);
-      if (next.has(jobId)) next.delete(jobId);
-      else next.add(jobId);
+      if (next.has(jobId)) {
+        next.delete(jobId);
+        jobApi.unsave(jobId);
+      } else {
+        next.add(jobId);
+        jobApi.save(jobId);
+      }
       return next;
     });
   };
@@ -198,6 +436,7 @@ export default function Matches() {
     });
   };
 
+  // ── Loading state ──
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -211,19 +450,42 @@ export default function Matches() {
     );
   }
 
-  const profileCompletionPct = (() => {
-    let filled = 0;
-    let total = 8;
-    if (profile?.skills?.length) filled++;
-    if (profile?.education?.length) filled++;
-    if (profile?.experience?.length) filled++;
-    if (profile?.projects?.length) filled++;
-    if (profile?.certifications?.length) filled++;
-    if (profile?.targetJobTitles?.length) filled++;
-    if (profile?.professionalHeadline) filled++;
-    if (profile?.location) filled++;
-    return Math.round((filled / total) * 100);
-  })();
+  // ── No profile state ──
+  if (!hasProfile) {
+    return (
+      <div className="space-y-6 pb-10">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+          <div className="pointer-events-none absolute -top-12 -left-12 h-64 w-64 rounded-full bg-blue-100/50 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-12 -right-12 h-64 w-64 rounded-full bg-purple-100/50 blur-3xl" />
+          <div className="relative z-10 flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              AI Job Matches
+            </h1>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+            <Sparkles className="h-8 w-8 text-blue-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Complete your profile to get matches
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Complete your ATS profile to receive personalized job matches.
+          </p>
+          <a
+            href="/profile"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-md"
+          >
+            Go to Profile
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-10">
@@ -243,12 +505,11 @@ export default function Matches() {
               </h1>
             </div>
             <p className="text-[15px] text-slate-500">
-              Jobs that match your ATS profile scored 75% or higher.
+              Jobs that match your ATS profile scored 70% or higher.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Profile completeness indicator */}
             <div className="hidden items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-2.5 sm:flex">
               <BarChart3 className="h-4 w-4 text-slate-400" />
               <div>
@@ -267,7 +528,7 @@ export default function Matches() {
                   Matches Found
                 </p>
                 <p className="text-sm font-bold text-slate-900">
-                  {matches.length}
+                  {enrichedMatches.length}
                 </p>
               </div>
             </div>
@@ -358,13 +619,29 @@ export default function Matches() {
       <p className="text-sm text-slate-500">
         Showing{" "}
         <span className="font-medium text-slate-700">
-          {filteredMatches.length}
+          {displayMatches.length}
         </span>{" "}
-        matching {filteredMatches.length === 1 ? "job" : "jobs"}
+        matching {displayMatches.length === 1 ? "job" : "jobs"}
       </p>
 
       {/* ── Match Cards ── */}
-      {filteredMatches.length === 0 ? (
+      {displayMatches.length === 0 && enrichedMatches.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+            <Search className="h-8 w-8 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">
+            No strong matches found yet
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Try updating your skills, expanding preferred locations, or{" "}
+            <a href="/explore-jobs" className="text-blue-600 hover:underline">
+              exploring all jobs
+            </a>
+            .
+          </p>
+        </div>
+      ) : displayMatches.length === 0 ? (
         <div className="rounded-2xl border border-slate-200/80 bg-white p-12 text-center shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
             <Search className="h-8 w-8 text-slate-400" />
@@ -382,7 +659,7 @@ export default function Matches() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredMatches.map((result) => (
+          {displayMatches.map((result) => (
             <MatchCard
               key={result.job.id}
               result={result}
@@ -390,8 +667,86 @@ export default function Matches() {
               isExpanded={expandedCards.has(result.job.id)}
               onToggleSave={() => toggleSave(result.job.id)}
               onToggleExpand={() => toggleExpand(result.job.id)}
+              onQuickApply={() => setQuickApplyJob(result.job)}
             />
           ))}
+        </div>
+      )}
+
+      {/* ── Quick Apply Modal ── */}
+      {quickApplyJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Quick Apply
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {quickApplyJob.title} at {quickApplyJob.company}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setQuickApplyJob(null);
+                  setQuickApplyNotes("");
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-medium text-slate-400">
+                  Resume
+                </p>
+                <p className="mt-0.5 text-sm text-slate-700">
+                  {profile?.resumeUrl
+                    ? "Your uploaded resume will be attached"
+                    : "No resume uploaded"}
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Cover Letter (optional)
+                </label>
+                <textarea
+                  rows={4}
+                  value={quickApplyNotes}
+                  onChange={(e) => setQuickApplyNotes(e.target.value)}
+                  placeholder="Write a brief cover letter or note for this application..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setQuickApplyJob(null);
+                  setQuickApplyNotes("");
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleQuickApply}
+                disabled={quickApplySubmitting}
+                className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-md disabled:opacity-50"
+              >
+                {quickApplySubmitting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {quickApplySubmitting ? "Submitting..." : "Submit Application"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -406,12 +761,14 @@ function MatchCard({
   isExpanded,
   onToggleSave,
   onToggleExpand,
+  onQuickApply,
 }: {
-  result: JobMatchResult;
+  result: DisplayMatch;
   isSaved: boolean;
   isExpanded: boolean;
   onToggleSave: () => void;
   onToggleExpand: () => void;
+  onQuickApply: () => void;
 }) {
   const { job, match, matchingSkills, missingSkills, whyThisJob, missingGaps } =
     result;
@@ -424,15 +781,6 @@ function MatchCard({
         : match.overall >= 80
           ? "text-indigo-600"
           : "text-amber-600";
-
-  const overallBg =
-    match.overall >= 95
-      ? "from-emerald-500 to-emerald-600"
-      : match.overall >= 90
-        ? "from-blue-500 to-blue-600"
-        : match.overall >= 80
-          ? "from-indigo-500 to-indigo-600"
-          : "from-amber-500 to-amber-600";
 
   const overallRing =
     match.overall >= 95
@@ -519,11 +867,13 @@ function MatchCard({
                 <Briefcase className="h-3.5 w-3.5" />
                 {job.jobType}
               </span>
-              <span className="flex items-center gap-1.5">
-                <IndianRupee className="h-3.5 w-3.5" />₹
-                {(job.salaryMin / 100000).toFixed(0)}–
-                {(job.salaryMax / 100000).toFixed(0)} LPA
-              </span>
+              {job.salaryMin > 0 && job.salaryMax > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <IndianRupee className="h-3.5 w-3.5" />₹
+                  {(job.salaryMin / 100000).toFixed(0)}–
+                  {(job.salaryMax / 100000).toFixed(0)} LPA
+                </span>
+              )}
               <span className="flex items-center gap-1.5 text-slate-400">
                 Posted {job.postedAt}
               </span>
@@ -558,10 +908,25 @@ function MatchCard({
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 pt-1">
-              <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-md">
-                <ExternalLink className="h-4 w-4" />
-                Apply Now
-              </button>
+              {job.externalApplyUrl ? (
+                <a
+                  href={job.externalApplyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-md"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Apply Now
+                </a>
+              ) : (
+                <button
+                  onClick={onQuickApply}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-md"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Quick Apply
+                </button>
+              )}
               <button
                 onClick={onToggleSave}
                 className={`flex items-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
@@ -596,11 +961,6 @@ function MatchCard({
               <BreakdownRow label="Skills" score={match.skills} />
               <BreakdownRow label="Experience" score={match.experience} />
               <BreakdownRow label="Education" score={match.education} />
-              <BreakdownRow label="Projects" score={match.projects} />
-              <BreakdownRow
-                label="Certifications"
-                score={match.certifications}
-              />
               <BreakdownRow label="Location" score={match.location} />
             </div>
           </div>
@@ -613,7 +973,7 @@ function MatchCard({
             <div className="rounded-xl border border-emerald-200/60 bg-emerald-50/40 p-4">
               <h4 className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-emerald-800">
                 <CheckCircle2 className="h-4 w-4" />
-                Why This Job Matches
+                Why This Matches
               </h4>
               <ul className="space-y-1.5">
                 {whyThisJob.map((reason, i) => (
@@ -628,12 +988,12 @@ function MatchCard({
               </ul>
             </div>
 
-            {/* Missing / Gap Skills */}
+            {/* Potential Gaps */}
             {missingGaps.length > 0 && (
               <div className="rounded-xl border border-amber-200/60 bg-amber-50/40 p-4">
                 <h4 className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-amber-800">
                   <AlertCircle className="h-4 w-4" />
-                  Missing / Gap Skills
+                  Potential Gaps
                 </h4>
                 <ul className="space-y-1.5">
                   {missingGaps.map((gap, i) => (
@@ -657,24 +1017,6 @@ function MatchCard({
               <p className="text-sm leading-relaxed text-slate-600">
                 {job.description}
               </p>
-              {job.responsibilities.length > 0 && (
-                <div className="mt-3">
-                  <h5 className="mb-1.5 text-xs font-semibold text-slate-500">
-                    Key Responsibilities
-                  </h5>
-                  <ul className="space-y-1">
-                    {job.responsibilities.map((r, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-2 text-sm text-slate-600"
-                      >
-                        <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
-                        {r}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
           </div>
         )}

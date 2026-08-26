@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const adminAuth_1 = require("../../middleware/adminAuth");
+const adminCompanyAdmins_controller_1 = require("../../controllers/admin/adminCompanyAdmins.controller");
+const router = (0, express_1.Router)();
+router.use(adminAuth_1.requireAuth, adminAuth_1.requireSuperAdmin);
+router.get('/', adminCompanyAdmins_controller_1.getCompanyAdmins);
+router.get('/:id', adminCompanyAdmins_controller_1.getCompanyAdminById);
+router.patch('/:id/suspend', adminCompanyAdmins_controller_1.suspendCompanyAdmin);
+router.patch('/:id/activate', adminCompanyAdmins_controller_1.activateCompanyAdmin);
+router.patch('/:id/block', adminCompanyAdmins_controller_1.blockCompanyAdmin);
+exports.default = router;
