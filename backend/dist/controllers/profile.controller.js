@@ -71,6 +71,7 @@ exports.uploadResume = (0, multer_1.default)({
     },
 }).single('resume');
 // ─── Schemas ────────────────────────────────────────────
+const emptyStringToUndefined = zod_1.z.string().transform(val => val === '' ? undefined : val);
 const updateProfileSchema = zod_1.z.object({
     phone: zod_1.z.string().optional(),
     location: zod_1.z.string().optional(),
@@ -79,10 +80,10 @@ const updateProfileSchema = zod_1.z.object({
     country: zod_1.z.string().optional(),
     dateOfBirth: zod_1.z.string().optional(),
     gender: zod_1.z.string().optional(),
-    website: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
-    linkedinUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
-    githubUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
-    portfolioUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
+    website: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
+    linkedinUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
+    githubUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
+    portfolioUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
     preferredLocations: zod_1.z.array(zod_1.z.string()).optional(),
     candidateType: zod_1.z.enum(['STUDENT_FRESHER', 'EXPERIENCED']).optional(),
     careerLevel: zod_1.z.string().optional(),
@@ -104,9 +105,9 @@ const educationSchema = zod_1.z.object({
     degree: zod_1.z.string().optional(),
     fieldOfStudy: zod_1.z.string().optional(),
     collegeUniversity: zod_1.z.string().optional(),
-    startYear: zod_1.z.number().optional(),
-    graduationYear: zod_1.z.number().optional(),
-    cgpaPercentage: zod_1.z.number().optional(),
+    startYear: zod_1.z.coerce.number().optional(),
+    graduationYear: zod_1.z.coerce.number().optional(),
+    cgpaPercentage: zod_1.z.coerce.number().optional(),
     isCurrentlyStudying: zod_1.z.boolean().optional(),
     description: zod_1.z.string().optional(),
     sortOrder: zod_1.z.number().optional(),
@@ -125,6 +126,16 @@ const experienceSchema = zod_1.z.object({
     technologies: zod_1.z.array(zod_1.z.string()).optional(),
     isInternship: zod_1.z.boolean().optional(),
     sortOrder: zod_1.z.number().optional(),
+}).transform(data => {
+    // If currently working, endDate should be undefined
+    if (data.isCurrentlyWorking) {
+        return { ...data, endDate: undefined };
+    }
+    // If endDate is empty string, convert to undefined
+    if (data.endDate === '') {
+        return { ...data, endDate: undefined };
+    }
+    return data;
 });
 const skillEntrySchema = zod_1.z.object({
     id: zod_1.z.number().optional(),
@@ -143,12 +154,20 @@ const projectSchema = zod_1.z.object({
     technologies: zod_1.z.array(zod_1.z.string()).optional(),
     responsibilities: zod_1.z.string().optional(),
     achievements: zod_1.z.string().optional(),
-    githubUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
-    liveDemoUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
+    githubUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
+    liveDemoUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
     startDate: zod_1.z.string().optional(),
     endDate: zod_1.z.string().optional(),
     isOngoing: zod_1.z.boolean().optional(),
     sortOrder: zod_1.z.number().optional(),
+}).transform(data => {
+    if (data.isOngoing) {
+        return { ...data, endDate: undefined };
+    }
+    if (data.endDate === '') {
+        return { ...data, endDate: undefined };
+    }
+    return data;
 });
 const certificationSchema = zod_1.z.object({
     id: zod_1.z.number().optional(),
@@ -157,8 +176,8 @@ const certificationSchema = zod_1.z.object({
     issueDate: zod_1.z.string().optional(),
     expiryDate: zod_1.z.string().optional(),
     credentialId: zod_1.z.string().optional(),
-    credentialUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
-    certificateUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
+    credentialUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
+    certificateUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
     sortOrder: zod_1.z.number().optional(),
 });
 const achievementSchema = zod_1.z.object({
@@ -168,7 +187,7 @@ const achievementSchema = zod_1.z.object({
     organization: zod_1.z.string().optional(),
     date: zod_1.z.string().optional(),
     achievementType: zod_1.z.string().optional(),
-    proofUrl: zod_1.z.string().url().optional().or(zod_1.z.literal('')),
+    proofUrl: emptyStringToUndefined.optional().refine(val => !val || zod_1.z.string().url().safeParse(val).success, { message: 'Invalid URL' }),
     sortOrder: zod_1.z.number().optional(),
 });
 const languageSchema = zod_1.z.object({
@@ -403,6 +422,7 @@ const upsertExperience = async (req, res, next) => {
         const processedData = { ...expData };
         if (processedData.startDate)
             processedData.startDate = new Date(processedData.startDate);
+        // endDate is already handled by schema transform (undefined when isCurrentlyWorking or empty string)
         if (processedData.endDate)
             processedData.endDate = new Date(processedData.endDate);
         let experience;
@@ -554,12 +574,10 @@ const upsertProject = async (req, res, next) => {
         const data = projectSchema.parse(req.body);
         const { id, ...projectData } = data;
         const processedData = { ...projectData };
-        if (processedData.githubUrl === '')
-            processedData.githubUrl = null;
-        if (processedData.liveDemoUrl === '')
-            processedData.liveDemoUrl = null;
+        // githubUrl and liveDemoUrl are already handled by schema transform (empty string -> undefined)
         if (processedData.startDate)
             processedData.startDate = new Date(processedData.startDate);
+        // endDate is already handled by schema transform (undefined when isOngoing or empty string)
         if (processedData.endDate)
             processedData.endDate = new Date(processedData.endDate);
         let project;
@@ -637,10 +655,7 @@ const upsertCertification = async (req, res, next) => {
         const data = certificationSchema.parse(req.body);
         const { id, ...certData } = data;
         const processedData = { ...certData };
-        if (processedData.credentialUrl === '')
-            processedData.credentialUrl = null;
-        if (processedData.certificateUrl === '')
-            processedData.certificateUrl = null;
+        // credentialUrl and certificateUrl are already handled by schema transform
         if (processedData.issueDate)
             processedData.issueDate = new Date(processedData.issueDate);
         if (processedData.expiryDate)
@@ -720,8 +735,7 @@ const upsertAchievement = async (req, res, next) => {
         const data = achievementSchema.parse(req.body);
         const { id, ...achData } = data;
         const processedData = { ...achData };
-        if (processedData.proofUrl === '')
-            processedData.proofUrl = null;
+        // proofUrl is already handled by schema transform
         if (processedData.date)
             processedData.date = new Date(processedData.date);
         let achievement;

@@ -42,6 +42,8 @@ export function calculateNextSyncAt(frequency: SyncFrequency): Date {
   const now = new Date();
 
   switch (frequency) {
+    case 'EVERY_10_MIN':
+      return new Date(now.getTime() + 10 * 60 * 1000);
     case 'EVERY_15_MIN':
       return new Date(now.getTime() + 15 * 60 * 1000);
     case 'EVERY_30_MIN':

@@ -48,7 +48,7 @@ const DEFAULT_FORM = {
   endpoint: '',
   authType: 'NONE',
   credentialsRef: '',
-  syncFrequency: 'HOURLY',
+  syncFrequency: 'EVERY_10_MIN',
   testConnection: true,
   initialSync: true,
 };
@@ -73,6 +73,13 @@ export default function JobFeeds() {
     load();
   }, []);
 
+  // Auto-set auth type to NONE for Greenhouse (public endpoint)
+  useEffect(() => {
+    if (form.sourceType === 'GREENHOUSE' && form.authType !== 'NONE') {
+      setForm((prev) => ({ ...prev, authType: 'NONE', credentialsRef: '' }));
+    }
+  }, [form.sourceType]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const submitData = editId ? form : { ...form, testConnection: form.testConnection, initialSync: form.initialSync };
@@ -89,7 +96,7 @@ export default function JobFeeds() {
       name: s.name,
       sourceType: s.sourceType,
       endpoint: s.endpoint || '',
-      authType: s.authType || 'NONE',
+      authType: s.sourceType === 'GREENHOUSE' ? 'NONE' : (s.authType || 'NONE'),
       credentialsRef: '',
       syncFrequency: s.syncFrequency,
       testConnection: false,
@@ -212,12 +219,14 @@ export default function JobFeeds() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#334155] mb-1">
-                API Endpoint
+                {form.sourceType === 'GREENHOUSE' ? 'Greenhouse Board URL' : 'API Endpoint'}
               </label>
               <input
                 value={form.endpoint}
                 onChange={(e) => setForm({ ...form, endpoint: e.target.value })}
-                placeholder="https://api.example.com/jobs"
+                placeholder={form.sourceType === 'GREENHOUSE' 
+                  ? 'https://boards-api.greenhouse.io/v1/boards/company/jobs?content=true' 
+                  : 'https://api.example.com/jobs'}
                 className="w-full px-3 py-2 rounded-lg border border-[#e2e8f0] text-sm focus:outline-none focus:border-[#5b4fe8]"
               />
             </div>
@@ -230,6 +239,7 @@ export default function JobFeeds() {
                 onChange={(e) => setForm({ ...form, syncFrequency: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border border-[#e2e8f0] text-sm focus:outline-none focus:border-[#5b4fe8]"
               >
+                <option value="EVERY_10_MIN">Every 10 minutes</option>
                 <option value="EVERY_15_MIN">Every 15 minutes</option>
                 <option value="EVERY_30_MIN">Every 30 minutes</option>
                 <option value="HOURLY">Hourly</option>
@@ -254,6 +264,11 @@ export default function JobFeeds() {
                 ))}
               </select>
             </div>
+            <p className="text-xs text-[#94a3b8]">
+              {form.sourceType === 'GREENHOUSE' 
+                ? 'Greenhouse public job board does not require authentication.' 
+                : 'Select authentication type for the feed source.'}
+            </p>
             {form.authType !== 'NONE' && (
               <div>
                 <label className="block text-sm font-medium text-[#334155] mb-1">

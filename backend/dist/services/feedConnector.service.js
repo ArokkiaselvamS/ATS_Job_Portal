@@ -36,7 +36,8 @@ function getAuthHeaders(source) {
 // ─── CONNECTORS ───────────────────────────────────────────
 class GreenhouseConnector {
     async fetchJobs(source) {
-        const url = `${source.endpoint}?content=true`;
+        // Use endpoint as-is; user provides full URL including ?content=true
+        const url = source.endpoint;
         const headers = getAuthHeaders(source);
         const res = await fetch(url, { headers });
         if (!res.ok) {

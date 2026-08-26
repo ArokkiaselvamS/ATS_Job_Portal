@@ -692,6 +692,7 @@ enum FeedAuthType {
 }
 
 enum SyncFrequency {
+  EVERY_10_MIN
   EVERY_15_MIN
   EVERY_30_MIN
   HOURLY

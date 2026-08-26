@@ -85,7 +85,8 @@ function getAuthHeaders(source: FeedSourceRecord): Record<string, string> {
 
 class GreenhouseConnector implements FeedConnector {
   async fetchJobs(source: FeedSourceRecord): Promise<NormalizedJob[]> {
-    const url = `${source.endpoint}?content=true`;
+    // Use endpoint as-is; user provides full URL including ?content=true
+    const url = source.endpoint!;
     const headers = getAuthHeaders(source);
     const res = await fetch(url, { headers });
 
