@@ -263,12 +263,23 @@ model Resume {
 model Company {
   id                 Int                @id @default(autoincrement())
   name               String
+  officialEmail      String?            @unique
+  passwordHash       String?
   logo               String?
   description        String?
   website            String?
   industry           String?
   companySize        String?
+  foundedYear        Int?
   location           String?
+  country            String?
+  state              String?
+  city               String?
+  address            String?
+  contactName        String?
+  designation        String?
+  contactPhone       String?
+  contactEmail       String?
   verificationStatus VerificationStatus @default(PENDING)
   verifiedAt         DateTime?
   verifiedById       Int?
@@ -324,6 +335,8 @@ model Job {
   feedSourceId     Int?
   feedSource       JobFeedSource?     @relation(fields: [feedSourceId], references: [id], onDelete: SetNull)
   externalApplyUrl String?
+  department       String?
+  rawData          Json?
   categoryId       Int?
   category         Category?          @relation(fields: [categoryId], references: [id])
   approvedAt       DateTime?
@@ -335,6 +348,8 @@ model Job {
   postedAt         DateTime           @default(now())
   closingDate      DateTime?
   expiresAt        DateTime?
+  firstSeenAt      DateTime           @default(now())
+  lastSeenAt       DateTime           @default(now()) @updatedAt
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 

@@ -15,6 +15,7 @@ const index_1 = __importDefault(require("./routes/admin/index"));
 const profile_routes_1 = __importDefault(require("./routes/profile.routes"));
 const job_routes_1 = __importDefault(require("./routes/job.routes"));
 const match_routes_1 = __importDefault(require("./routes/match.routes"));
+const company_routes_1 = __importDefault(require("./routes/company/company.routes"));
 const app = (0, express_1.default)();
 // Middleware
 app.use(express_1.default.json());
@@ -32,6 +33,7 @@ app.get('/api/health', (req, res) => {
 // Routes — ORDER MATTERS: /api/admin must come BEFORE /api
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/admin', index_1.default);
+app.use('/api/company', company_routes_1.default);
 app.use('/api/profile', profile_routes_1.default);
 app.use('/api/jobs', job_routes_1.default);
 app.use('/api/matches', match_routes_1.default);

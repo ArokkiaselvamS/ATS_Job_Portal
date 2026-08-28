@@ -5,6 +5,21 @@ import Employers from "./pages/Employers";
 import Blog from "./pages/Blog";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
+import CompanyRegisterPage from "./pages/CompanyRegisterPage";
+
+// Company Admin
+import { CompanyAdminAuthProvider, CompanyAdminLayout } from "./hooks/useCompanyAdminAuth";
+import CompanyAdminLogin from "./pages/company-admin/CompanyAdminLogin";
+import CompanyAdminDashboard from "./pages/company-admin/CompanyAdminDashboard";
+import CompanyAdminCompanyPage from "./pages/company-admin/CompanyAdminCompanyPage";
+import CompanyAdminJobs from "./pages/company-admin/CompanyAdminJobs";
+import CompanyAdminApplications from "./pages/company-admin/CompanyAdminApplications";
+import CompanyAdminCandidates from "./pages/company-admin/CompanyAdminCandidates";
+import CompanyAdminInterviews from "./pages/company-admin/CompanyAdminInterviews";
+import CompanyAdminTeam from "./pages/company-admin/CompanyAdminTeam";
+import CompanyAdminAnalytics from "./pages/company-admin/CompanyAdminAnalytics";
+import CompanyAdminNotifications from "./pages/company-admin/CompanyAdminNotifications";
+import CompanyAdminSettings from "./pages/company-admin/CompanyAdminSettings";
 
 // Authenticated layout & pages
 import AuthenticatedLayout from "./components/AuthenticatedLayout";
@@ -63,6 +78,24 @@ export default function App() {
       <Route path="/jobs" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/company/register" element={<CompanyRegisterPage />} />
+
+      {/* ── Company Admin Routes ── */}
+      <Route path="/company-admin" element={<CompanyAdminAuthProvider />}>
+        <Route path="login" element={<CompanyAdminLogin />} />
+        <Route element={<CompanyAdminLayout />}>
+          <Route path="dashboard" element={<CompanyAdminDashboard />} />
+          <Route path="company-page" element={<CompanyAdminCompanyPage />} />
+          <Route path="jobs" element={<CompanyAdminJobs />} />
+          <Route path="applications" element={<CompanyAdminApplications />} />
+          <Route path="candidates" element={<CompanyAdminCandidates />} />
+          <Route path="interviews" element={<CompanyAdminInterviews />} />
+          <Route path="team" element={<CompanyAdminTeam />} />
+          <Route path="analytics" element={<CompanyAdminAnalytics />} />
+          <Route path="notifications" element={<CompanyAdminNotifications />} />
+          <Route path="settings" element={<CompanyAdminSettings />} />
+        </Route>
+      </Route>
 
       {/* ── Authenticated Routes ── */}
       <Route

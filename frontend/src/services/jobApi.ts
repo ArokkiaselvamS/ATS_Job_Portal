@@ -77,9 +77,17 @@ export interface BackendJob {
   salaryMax?: number;
   salaryCurrency?: string;
   skills: string[];
+  department?: string;
   status: string;
   source?: string;
+  sourceType?: string;
   externalApplyUrl?: string;
+  rawData?: any;
+  feedSource?: {
+    id: number;
+    name: string;
+    sourceType: string;
+  } | null;
   postedAt: string;
   closingDate?: string;
   views?: number;
@@ -87,6 +95,11 @@ export interface BackendJob {
     id: number;
     name: string;
     logo?: string;
+    description?: string;
+    website?: string;
+    industry?: string;
+    companySize?: string;
+    location?: string;
   };
 }
 

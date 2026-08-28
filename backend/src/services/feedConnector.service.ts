@@ -26,9 +26,12 @@ export interface NormalizedJob {
   salaryMax?: number;
   salaryCurrency?: string;
   skills: string[];
+  department?: string;
   applyUrl: string;
+  jobUrl?: string;
   postedAt: Date;
   expiresAt?: Date;
+  rawData?: any;
 }
 
 export interface SyncResult {
@@ -104,12 +107,13 @@ class GreenhouseConnector implements FeedConnector {
     const locationName: string = job.location?.name ?? '';
     const workMode = this.inferWorkMode(locationName);
     const departments: string[] = (job.departments ?? []).map((d: any) => d.name);
+    const department = departments.join(', ') || undefined;
 
     return {
       externalJobId: String(job.id),
       title: job.title ?? '',
-      description: job.description ?? '',
-      companyName,
+      description: job.content ?? job.description ?? '',
+      companyName: job.company_name ?? companyName,
       companyLogo: undefined,
       location: locationName || undefined,
       city: this.extractCity(locationName),
@@ -121,11 +125,16 @@ class GreenhouseConnector implements FeedConnector {
       salaryMax: undefined,
       salaryCurrency: undefined,
       skills: departments,
+      department,
       applyUrl: job.absolute_url
         ? `https://boards.greenhouse.io${job.absolute_url}`
         : '',
+      jobUrl: job.absolute_url
+        ? `https://boards.greenhouse.io${job.absolute_url}`
+        : undefined,
       postedAt: job.updated_at ? new Date(job.updated_at) : new Date(),
       expiresAt: undefined,
+      rawData: job,
     };
   }
 
@@ -182,9 +191,12 @@ class LeverConnector implements FeedConnector {
       salaryMax: undefined,
       salaryCurrency: undefined,
       skills: job.categories?.team ? [job.categories.team] : [],
+      department: job.categories?.team ?? undefined,
       applyUrl: job.hostedUrl ?? job.applyUrl ?? '',
+      jobUrl: job.hostedUrl ?? undefined,
       postedAt: job.createdAt ? new Date(job.createdAt) : new Date(),
       expiresAt: undefined,
+      rawData: job,
     };
   }
 
@@ -243,6 +255,7 @@ class RemotiveConnector implements FeedConnector {
       applyUrl: job.url ?? job.apply_url ?? '',
       postedAt: job.pubDate ? new Date(job.pubDate) : job.date ? new Date(job.date) : new Date(),
       expiresAt: undefined,
+      rawData: job,
     };
   }
 }
@@ -292,6 +305,7 @@ class ArbeitnowConnector implements FeedConnector {
       applyUrl: job.url ?? job.apply_url ?? job.link ?? '',
       postedAt: job.posted_at ? new Date(job.posted_at) : job.created_at ? new Date(job.created_at) : new Date(),
       expiresAt: job.expires_at ? new Date(job.expires_at) : undefined,
+      rawData: job,
     };
   }
 }
@@ -343,9 +357,12 @@ class GenericApiConnector implements FeedConnector {
       salaryMax: item.salary_max ?? item.salaryMax ?? item.salary_max_amount ?? undefined,
       salaryCurrency: item.salary_currency ?? item.salaryCurrency ?? item.currency ?? undefined,
       skills,
+      department: item.department ?? item.department_name ?? undefined,
       applyUrl: item.apply_url ?? item.applyUrl ?? item.url ?? item.link ?? item.application_url ?? '',
+      jobUrl: item.url ?? item.link ?? item.job_url ?? undefined,
       postedAt: item.posted_at ?? item.postedAt ?? item.published_at ?? item.created_at ?? new Date(),
       expiresAt: item.expires_at ?? item.expiresAt ?? item.deadline ?? undefined,
+      rawData: item,
     };
   }
 }
@@ -403,6 +420,7 @@ class RSSConnector implements FeedConnector {
         applyUrl: link ?? '',
         postedAt: pubDate ? new Date(pubDate) : new Date(),
         expiresAt: undefined,
+        rawData: { title, link, description, pubDate },
       });
     }
 
@@ -523,73 +541,40 @@ export async function syncFeedSource(sourceId: number): Promise<SyncResult> {
       try {
         seenExternalIds.add(nj.externalJobId);
 
-        // Primary dedup: source + sourceJobId
-        const existingBySourceJob = await prisma.job.findUnique({
-          where: { source_sourceJobId: { source: jobSource, sourceJobId: nj.externalJobId } },
-        });
-
-        if (existingBySourceJob) {
-          // Update if changed
-          const hasChanged =
-            existingBySourceJob.title !== nj.title ||
-            existingBySourceJob.description !== nj.description ||
-            existingBySourceJob.location !== nj.location;
-
-          if (hasChanged) {
-            await prisma.job.update({
-              where: { id: existingBySourceJob.id },
-              data: {
-                title: nj.title,
-                description: nj.description,
-                location: nj.location,
-                city: nj.city,
-                country: nj.country,
-                workMode: nj.workMode,
-                jobType: nj.jobType,
-                experienceLevel: nj.experienceLevel,
-                salaryMin: nj.salaryMin,
-                salaryMax: nj.salaryMax,
-                salaryCurrency: nj.salaryCurrency,
-                skills: nj.skills,
-                externalApplyUrl: nj.applyUrl,
-                status: 'ACTIVE',
-              },
-            });
-            result.updated++;
-          } else {
-            result.duplicates++;
-          }
-          continue;
-        }
-
-        // Fallback dedup: normalized company + title + location
-        const normalizedCompany = normalizeString(nj.companyName);
-        const normalizedTitle = normalizeString(nj.title);
-        const normalizedLocation = normalizeString(nj.location ?? '');
-
-        const crossDuplicate = await prisma.job.findFirst({
+        // Primary dedup: feedSourceId + sourceJobId
+        const existingBySourceJob = await prisma.job.findFirst({
           where: {
-            AND: [
-              { companyName: { contains: nj.companyName, mode: 'insensitive' } },
-              { title: { contains: nj.title, mode: 'insensitive' } },
-            ],
+            feedSourceId: sourceId,
+            sourceJobId: nj.externalJobId,
           },
         });
 
-        if (crossDuplicate) {
-          // Check if the normalized values actually match
-          const existingNormCompany = normalizeString(crossDuplicate.companyName ?? '');
-          const existingNormTitle = normalizeString(crossDuplicate.title);
-          const existingNormLocation = normalizeString(crossDuplicate.location ?? '');
-
-          if (
-            existingNormCompany === normalizedCompany &&
-            existingNormTitle === normalizedTitle &&
-            existingNormLocation === normalizedLocation
-          ) {
-            result.duplicates++;
-            continue;
-          }
+        if (existingBySourceJob) {
+          // Always update to keep data fresh and mark as seen
+          await prisma.job.update({
+            where: { id: existingBySourceJob.id },
+            data: {
+              title: nj.title,
+              description: nj.description,
+              location: nj.location,
+              city: nj.city,
+              country: nj.country,
+              workMode: nj.workMode,
+              jobType: nj.jobType,
+              experienceLevel: nj.experienceLevel,
+              salaryMin: nj.salaryMin,
+              salaryMax: nj.salaryMax,
+              salaryCurrency: nj.salaryCurrency,
+              skills: nj.skills,
+              department: nj.department,
+              externalApplyUrl: nj.applyUrl,
+              rawData: nj.rawData ?? undefined,
+              status: 'ACTIVE',
+              lastSeenAt: new Date(),
+            },
+          });
+          result.updated++;
+          continue;
         }
 
         // Find or create company
@@ -612,12 +597,14 @@ export async function syncFeedSource(sourceId: number): Promise<SyncResult> {
             salaryMax: nj.salaryMax,
             salaryCurrency: nj.salaryCurrency,
             skills: nj.skills,
+            department: nj.department,
             status: 'ACTIVE',
             source: jobSource,
             sourceType: source.sourceType,
             sourceJobId: nj.externalJobId,
             feedSourceId: sourceId,
             externalApplyUrl: nj.applyUrl,
+            rawData: nj.rawData ?? undefined,
             postedAt: nj.postedAt,
             expiresAt: nj.expiresAt,
           },
@@ -762,12 +749,14 @@ export function createJobFromNormalized(
       salaryMax: normalized.salaryMax,
       salaryCurrency: normalized.salaryCurrency,
       skills: normalized.skills,
+      department: normalized.department,
       status: 'ACTIVE',
       source: jobSource,
       sourceType,
       sourceJobId: normalized.externalJobId,
       feedSourceId: sourceId,
       externalApplyUrl: normalized.applyUrl,
+      rawData: normalized.rawData ?? undefined,
       postedAt: normalized.postedAt,
       expiresAt: normalized.expiresAt,
     },
