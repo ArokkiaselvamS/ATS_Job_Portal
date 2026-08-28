@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import './SocialLogin.css'
 
@@ -44,7 +45,29 @@ const PROVIDERS = [
   { id: 'apple', label: 'Apple', Icon: AppleMark },
 ]
 
-export default function SocialLogin({ onSelect }) {
+export default function SocialLogin({ onSelect, onLoginSuccess, onNotify, onGoogleLogin }) {
+  const [loadingProvider, setLoadingProvider] = useState(null)
+
+  async function handleClick(providerId, label) {
+    if (providerId === 'google' && onGoogleLogin) {
+      try {
+        setLoadingProvider('google')
+        if (onNotify) onNotify('Signing in with Google...', 'info')
+        const userData = await onGoogleLogin()
+        if (onNotify) onNotify(`Signed in as ${userData.firstName}!`, 'success')
+        if (onLoginSuccess) onLoginSuccess(userData)
+      } catch (err) {
+        if (err?.code !== 'auth/popup-closed-by-user') {
+          if (onNotify) onNotify(err?.message || 'Google sign-in failed.', 'error')
+        }
+      } finally {
+        setLoadingProvider(null)
+      }
+    } else {
+      if (onSelect) onSelect(label)
+    }
+  }
+
   return (
     <div className="social-login">
       {PROVIDERS.map(({ id, label, Icon }) => (
@@ -52,12 +75,13 @@ export default function SocialLogin({ onSelect }) {
           key={id}
           type="button"
           className="social-login__btn"
+          disabled={loadingProvider !== null}
           whileHover={{ y: -3, boxShadow: '0 10px 22px rgba(28,36,64,0.1)' }}
           whileTap={{ scale: 0.96 }}
-          onClick={() => onSelect(label)}
+          onClick={() => handleClick(id, label)}
         >
           <Icon />
-          <span>{label}</span>
+          <span>{loadingProvider === id ? 'Signing in...' : label}</span>
         </motion.button>
       ))}
     </div>

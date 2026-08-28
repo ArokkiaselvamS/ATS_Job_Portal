@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { signInWithGoogle, sendPasswordReset } from "../services/firebaseAuth";
 import HeroSection from "../../../aescion-login/src/components/HeroSection.jsx";
 import LoginForm from "../../../aescion-login/src/components/LoginForm.jsx";
 import ForgotPasswordModal from "../../../aescion-login/src/components/ForgotPasswordModal.jsx";
@@ -59,6 +60,7 @@ export default function LoginPage() {
               onOpenForgotPassword={() => setModalOpen(true)}
               onSwitchToRegister={() => navigate("/register")}
               onNotify={notify}
+              onGoogleLogin={signInWithGoogle}
               onLoginSuccess={(userData: any) => {
                 login(userData);
                 const redirectPath = getRedirectPath(userData.role);
@@ -68,7 +70,11 @@ export default function LoginPage() {
           </AnimatePresence>
         </motion.div>
 
-        <ForgotPasswordModal open={modalOpen} onClose={() => setModalOpen(false)} />
+        <ForgotPasswordModal 
+          open={modalOpen} 
+          onClose={() => setModalOpen(false)} 
+          onSendResetEmail={sendPasswordReset}
+        />
         <Toast toasts={toasts} onDismiss={dismissToast} />
       </div>
     </div>
