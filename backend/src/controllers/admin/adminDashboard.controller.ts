@@ -17,6 +17,12 @@ export const getDashboard = async (req: Request, res: Response, next: NextFuncti
       reportedJobs,
       totalAdmins,
       externalFeedJobs,
+      newCompanies,
+      jobsPostedByCompanies,
+      shortlistedCandidates,
+      newUsers,
+      applicationsToday,
+      applicationsThisWeek,
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'JOB_SEEKER' } }),
       prisma.company.count(),
@@ -31,6 +37,12 @@ export const getDashboard = async (req: Request, res: Response, next: NextFuncti
       prisma.job.count({ where: { isReported: true } }),
       prisma.user.count({ where: { role: { in: ['SUPER_ADMIN', 'ADMIN'] } } }),
       prisma.job.count({ where: { source: { not: 'INTERNAL' } } }),
+      prisma.company.count({ where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } }),
+      prisma.job.count({ where: { source: 'INTERNAL' } }),
+      prisma.application.count({ where: { status: 'SCREENING' } }),
+      prisma.user.count({ where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } }),
+      prisma.application.count({ where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } } }),
+      prisma.application.count({ where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } }),
     ]);
 
     const openReports = await prisma.platformReport.count({ where: { status: 'OPEN' } });
@@ -112,6 +124,12 @@ export const getDashboard = async (req: Request, res: Response, next: NextFuncti
           openReports,
           totalAdmins,
           externalFeedJobs,
+          newCompanies,
+          jobsPostedByCompanies,
+          shortlistedCandidates,
+          newUsers,
+          applicationsToday,
+          applicationsThisWeek,
         },
         recentActivity,
         userGrowth,

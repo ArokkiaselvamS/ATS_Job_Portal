@@ -39,10 +39,20 @@ interface Job {
   salaryMax?: number | null;
   salaryCurrency?: string | null;
   skills: string[];
+  department?: string | null;
   status: string;
+  source?: string;
+  sourceType?: string | null;
+  externalApplyUrl?: string | null;
   postedAt: string;
   closingDate?: string | null;
   views?: number;
+  rawData?: any;
+  feedSource?: {
+    id: number;
+    name: string;
+    sourceType: string;
+  } | null;
   company?: {
     id: number;
     name: string;
@@ -748,6 +758,17 @@ function JobCard({
   const salary = formatSalary(job);
   const workModeLabel = WORK_MODE_LABELS[job.workMode] || job.workMode;
   const jobTypeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType;
+  const isExternal = !!(job.externalApplyUrl || job.feedSource);
+
+  const handleApplyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isExternal) {
+      const url = job.externalApplyUrl || job.rawData?.absolute_url;
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      onQuickApply();
+    }
+  };
 
   return (
     <div
@@ -810,6 +831,12 @@ function JobCard({
               {workModeLabel}
             </span>
             <span>{jobTypeLabel}</span>
+            {job.department && (
+              <span className="flex items-center gap-1">
+                <Building2 className="h-3 w-3" />
+                {job.department}
+              </span>
+            )}
             {job.experienceLevel && (
               <span>
                 {EXPERIENCE_DISPLAY[job.experienceLevel] || job.experienceLevel}
@@ -855,13 +882,20 @@ function JobCard({
               {timeAgo(job.postedAt)}
             </span>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onQuickApply();
-              }}
-              className="rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+              onClick={handleApplyClick}
+              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
             >
-              Quick Apply
+              {isExternal ? (
+                <>
+                  <ExternalLink className="h-3 w-3" />
+                  Apply
+                </>
+              ) : (
+                <>
+                  <Send className="h-3 w-3" />
+                  Quick Apply
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -893,6 +927,7 @@ function JobDetailModal({
   const salary = formatSalary(job);
   const workModeLabel = WORK_MODE_LABELS[job.workMode] || job.workMode;
   const jobTypeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType;
+  const isExternal = !!(job.externalApplyUrl || job.feedSource);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -900,6 +935,39 @@ function JobDetailModal({
       document.body.style.overflow = "";
     };
   }, []);
+
+  const sanitizeHtml = (html: string): string => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+  };
+
+  const renderDescription = (text: string) => {
+    const isHtml = text.includes("<") && text.includes(">");
+    if (isHtml) {
+      return (
+        <div
+          className="prose prose-sm max-w-none text-slate-600 [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:text-slate-800 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-800 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-700 [&_li]:ml-4 [&_li]:mb-1 [&_li]:list-disc [&_p]:mb-3 [&_p]:leading-relaxed [&_ul]:mb-3 [&_ul]:list-inside [&_ul]:list-disc [&_strong]:font-semibold [&_strong]:text-slate-800"
+          dangerouslySetInnerHTML={{ __html: text }}
+        />
+      );
+    }
+    return (
+      <div className="prose prose-sm max-w-none text-slate-600">
+        {text.split("\n").map((paragraph, i) => (
+          <p key={i} className="mb-2 leading-relaxed">
+            {paragraph}
+          </p>
+        ))}
+      </div>
+    );
+  };
+
+  const handleExternalApply = () => {
+    const url = job.externalApplyUrl || job.rawData?.absolute_url;
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div
@@ -959,6 +1027,12 @@ function JobDetailModal({
                     {workModeLabel}
                   </span>
                   <span>{jobTypeLabel}</span>
+                  {job.department && (
+                    <span className="flex items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {job.department}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -985,6 +1059,12 @@ function JobDetailModal({
                 <Clock className="h-4 w-4" />
                 Posted {timeAgo(job.postedAt)}
               </div>
+              {job.feedSource && (
+                <div className="flex items-center gap-2 rounded-lg bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700">
+                  <ExternalLink className="h-4 w-4" />
+                  {job.feedSource.name}
+                </div>
+              )}
             </div>
 
             {/* Skills */}
@@ -1005,18 +1085,14 @@ function JobDetailModal({
             )}
 
             {/* Description */}
-            <div className="mt-5">
-              <h3 className="mb-2 text-sm font-semibold text-slate-700">
-                Job Description
-              </h3>
-              <div className="prose prose-sm max-w-none text-slate-600">
-                {job.description.split("\n").map((paragraph, i) => (
-                  <p key={i} className="mb-2 leading-relaxed">
-                    {paragraph}
-                  </p>
-                ))}
+            {job.description && (
+              <div className="mt-5">
+                <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                  Job Description
+                </h3>
+                {renderDescription(job.description)}
               </div>
-            </div>
+            )}
 
             {/* Company Info */}
             {job.company && (
@@ -1057,13 +1133,23 @@ function JobDetailModal({
 
             {/* Action Buttons */}
             <div className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-5">
-              <button
-                onClick={onQuickApply}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-              >
-                <Send className="h-4 w-4" />
-                Quick Apply
-              </button>
+              {isExternal ? (
+                <button
+                  onClick={handleExternalApply}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Apply Now
+                </button>
+              ) : (
+                <button
+                  onClick={onQuickApply}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  <Send className="h-4 w-4" />
+                  Quick Apply
+                </button>
+              )}
               <button
                 onClick={onToggleSave}
                 className={`flex items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors ${

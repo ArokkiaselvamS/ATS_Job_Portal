@@ -14,6 +14,7 @@ export const getJobs = async (req: Request, res: Response, next: NextFunction): 
       skills,
       source,
       status,
+      department,
       page = '1',
       limit = '12',
       sortBy = 'postedAt',
@@ -35,6 +36,7 @@ export const getJobs = async (req: Request, res: Response, next: NextFunction): 
         { companyName: { contains: searchTerm, mode: 'insensitive' } },
         { location: { contains: searchTerm, mode: 'insensitive' } },
         { skills: { hasSome: [searchTerm] } },
+        { department: { contains: searchTerm, mode: 'insensitive' } },
       ];
     }
 
@@ -71,6 +73,10 @@ export const getJobs = async (req: Request, res: Response, next: NextFunction): 
       where.source = source;
     }
 
+    if (department) {
+      where.department = { contains: String(department), mode: 'insensitive' };
+    }
+
     const orderBy: any = {};
     switch (sortBy) {
       case 'salary':
@@ -89,7 +95,10 @@ export const getJobs = async (req: Request, res: Response, next: NextFunction): 
     const [jobs, total] = await Promise.all([
       prisma.job.findMany({
         where,
-        include: { company: { select: { id: true, name: true, logo: true, location: true } } },
+        include: {
+          company: { select: { id: true, name: true, logo: true, location: true } },
+          feedSource: { select: { id: true, name: true, sourceType: true } },
+        },
         orderBy,
         skip,
         take: limitNum,
@@ -138,6 +147,13 @@ export const getJobById = async (req: Request, res: Response, next: NextFunction
             location: true,
           },
         },
+        feedSource: {
+          select: {
+            id: true,
+            name: true,
+            sourceType: true,
+          },
+        },
       },
     });
 
@@ -146,10 +162,13 @@ export const getJobById = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    await prisma.job.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Only count views for active/published jobs
+    if (job.status === 'ACTIVE') {
+      await prisma.job.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+    }
 
     res.json({ success: true, data: job });
   } catch (error) {

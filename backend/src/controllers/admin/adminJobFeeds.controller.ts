@@ -3,6 +3,7 @@ import prisma from '../../utils/prisma';
 import { createAuditLog } from '../../services/audit.service';
 import { fetchAndNormalizeJobs, syncFeedSource } from '../../services/feedConnector.service';
 import { encrypt, decrypt } from '../../utils/crypto';
+import { calculateNextSyncAt } from '../../services/scheduler.service';
 
 export const getFeedSources = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -39,7 +40,8 @@ export const createFeedSource = async (req: Request, res: Response, next: NextFu
         endpoint, 
         authType: authType || 'NONE', 
         credentialsRef: encryptedCredentials, 
-        syncFrequency: syncFrequency || 'HOURLY' 
+        syncFrequency: syncFrequency || 'HOURLY',
+        nextSyncAt: calculateNextSyncAt(syncFrequency || 'HOURLY'),
       },
     });
     await createAuditLog({ adminId: req.user!.userId, action: 'FEED_SOURCE_CREATED', entityType: 'JobFeedSource', entityId: source.id, newValue: { name, sourceType } });
