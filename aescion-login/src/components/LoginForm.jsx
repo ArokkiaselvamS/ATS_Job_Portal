@@ -71,7 +71,7 @@ function validate(values, t) {
   return errors
 }
 
-export default function LoginForm({ language, onLanguageChange, onOpenForgotPassword, onSwitchToRegister, onNotify, onLoginSuccess }) {
+export default function LoginForm({ language, onLanguageChange, onOpenForgotPassword, onSwitchToRegister, onNotify, onLoginSuccess, onGoogleLogin }) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -232,7 +232,12 @@ export default function LoginForm({ language, onLanguageChange, onOpenForgotPass
         <span />
       </div>
 
-      <SocialLogin onSelect={(provider) => onNotify(`${provider} sign-in integration is ready.`, 'info')} />
+      <SocialLogin 
+        onLoginSuccess={onLoginSuccess}
+        onNotify={onNotify}
+        onGoogleLogin={onGoogleLogin}
+        onSelect={(provider) => onNotify(`${provider} sign-in is coming soon. Please use Google Sign-In or Email.`, 'info')} 
+      />
 
       <div className="login-form__security">
         <SecurityCard />

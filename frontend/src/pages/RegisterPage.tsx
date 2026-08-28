@@ -2,9 +2,11 @@ import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { signInWithGoogle, sendPasswordReset } from "../services/firebaseAuth";
 import HeroSection from "../../../aescion-login/src/components/HeroSection.jsx";
 import RegisterForm from "../../../aescion-login/src/components/RegisterForm.jsx";
 import ForgotPasswordModal from "../../../aescion-login/src/components/ForgotPasswordModal.jsx";
+import OtpVerificationModal from "../../../aescion-login/src/components/OtpVerificationModal.jsx";
 import Toast from "../../../aescion-login/src/components/Toast.jsx";
 import "../styles/auth-scoped.css";
 
@@ -13,6 +15,9 @@ export default function RegisterPage() {
   const { login } = useAuth();
   const [language, setLanguage] = useState("en");
   const [modalOpen, setModalOpen] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpPhone, setOtpPhone] = useState("");
   const [toasts, setToasts] = useState<any[]>([]);
 
   const notify = useCallback((message: string, variant = "info") => {
@@ -45,6 +50,12 @@ export default function RegisterPage() {
               onLanguageChange={setLanguage}
               onSwitchToLogin={() => navigate("/login")}
               onNotify={notify}
+              onGoogleLogin={signInWithGoogle}
+              onRequireOtp={(email: string, phone?: string) => {
+                setOtpEmail(email);
+                setOtpPhone(phone || "");
+                setOtpModalOpen(true);
+              }}
               onRegisterSuccess={(userData: any) => {
                 login(userData);
                 navigate("/home");
@@ -53,7 +64,24 @@ export default function RegisterPage() {
           </AnimatePresence>
         </motion.div>
 
-        <ForgotPasswordModal open={modalOpen} onClose={() => setModalOpen(false)} />
+        <OtpVerificationModal
+          open={otpModalOpen}
+          email={otpEmail}
+          phone={otpPhone}
+          onClose={() => setOtpModalOpen(false)}
+          onNotify={notify}
+          onVerifySuccess={(userData: any) => {
+            setOtpModalOpen(false);
+            login(userData);
+            navigate("/home");
+          }}
+        />
+
+        <ForgotPasswordModal 
+          open={modalOpen} 
+          onClose={() => setModalOpen(false)} 
+          onSendResetEmail={sendPasswordReset}
+        />
         <Toast toasts={toasts} onDismiss={dismissToast} />
       </div>
     </div>

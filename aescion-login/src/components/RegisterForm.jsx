@@ -89,7 +89,7 @@ function validate(values, t) {
   return errors
 }
 
-export default function RegisterForm({ language, onLanguageChange, onSwitchToLogin, onNotify, onRegisterSuccess }) {
+export default function RegisterForm({ language, onLanguageChange, onSwitchToLogin, onNotify, onRegisterSuccess, onGoogleLogin, onRequireOtp }) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -138,31 +138,33 @@ export default function RegisterForm({ language, onLanguageChange, onSwitchToLog
     const nameParts = values.fullName.trim().split(/\s+/)
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || firstName
+    const email = values.identifier.trim()
 
     setSubmitting(true)
     try {
       const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
-      const res = await fetch(`${apiBase}/auth/register`, {
+      const res = await fetch(`${apiBase}/auth/send-registration-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           firstName,
           lastName,
-          email: values.identifier,
+          email,
           password: values.password,
           phone: values.mobile,
         }),
       })
       const data = await res.json()
       if (data.success) {
-        onNotify(`Account created successfully for ${firstName}!`, 'success')
-        if (onRegisterSuccess) onRegisterSuccess(data.data)
+        onNotify(`Verification code sent to ${email}`, 'success')
+        if (onRequireOtp) {
+          onRequireOtp(email, values.mobile)
+        }
       } else {
-        onNotify(data.message || 'Registration failed.', 'error')
+        onNotify(data.message || 'Unable to send verification OTP.', 'error')
       }
     } catch {
-      onNotify('Unable to connect to the server.', 'error')
+      onNotify('Unable to connect to the server. Please check your connection.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -280,7 +282,12 @@ export default function RegisterForm({ language, onLanguageChange, onSwitchToLog
         <span />
       </div>
 
-      <SocialLogin onSelect={(provider) => onNotify(`${provider} registration is ready.`, 'info')} />
+      <SocialLogin 
+        onLoginSuccess={onRegisterSuccess}
+        onNotify={onNotify}
+        onGoogleLogin={onGoogleLogin}
+        onSelect={(provider) => onNotify(`${provider} registration is coming soon. Please use Google Sign-In or Email.`, 'info')} 
+      />
 
       <div className="login-form__security">
         <SecurityCard />

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Lock, Mail, X, CheckCircle2, ArrowRight } from 'lucide-react'
 import './ForgotPasswordModal.css'
 
-export default function ForgotPasswordModal({ open, onClose }) {
+export default function ForgotPasswordModal({ open, onClose, onSendResetEmail }) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
@@ -29,7 +29,7 @@ export default function ForgotPasswordModal({ open, onClose }) {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [open, onClose])
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Enter a valid email address.')
@@ -37,11 +37,23 @@ export default function ForgotPasswordModal({ open, onClose }) {
     }
     setError('')
     setSending(true)
-    // Frontend demo only — replace with a real API/Firebase/Supabase call.
-    setTimeout(() => {
-      setSending(false)
+
+    try {
+      if (onSendResetEmail) {
+        await onSendResetEmail(email)
+      } else {
+        await new Promise((r) => setTimeout(r, 800))
+      }
       setSent(true)
-    }, 1100)
+    } catch (err) {
+      if (err?.code === 'auth/user-not-found') {
+        setSent(true)
+      } else {
+        setError(err?.message || 'Failed to send password reset email.')
+      }
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
