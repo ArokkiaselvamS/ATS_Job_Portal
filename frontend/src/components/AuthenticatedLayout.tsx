@@ -9,7 +9,7 @@ import aescionWordmark from "../assets/branding/aescion-wordmark.png";
 const topNavItems = [
   { to: "/home", label: "Dashboard" },
   { to: "/connections", label: "Network" },
-  { to: "/matches", label: "Matches", icon: Sparkles },
+  { to: "/matches", label: "Matches" },
   { to: "/explore-jobs", label: "Jobs" },
   { to: "/applications", label: "Job Tracker" },
   { to: "/resume-builder", label: "Documents" },

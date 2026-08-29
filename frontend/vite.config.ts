@@ -10,6 +10,7 @@ export default defineConfig({
       allow: [
         path.resolve(__dirname),
         path.resolve(__dirname, ".."),
+        "C:/Users/USER/.gemini/antigravity-ide/brain",
       ],
     },
   },
