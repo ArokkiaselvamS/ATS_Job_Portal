@@ -1,114 +1,107 @@
-import { Sparkles, Cpu, ShieldCheck, Target, Zap, FileCheck2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, FileText, Building2, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 
-const features = [
-  {
-    icon: Cpu,
-    title: "AI Resume Parsing & Match Score",
-    description:
-      "Upload your resume and get an instant AI compatibility score against job descriptions, along with tailored improvement tips.",
-    color: "bg-indigo-50 text-[#2B26D9]",
-    badge: "Instant Analysis",
-  },
-  {
-    icon: Target,
-    title: "Precision Job Recommendations",
-    description:
-      "Our neural matching algorithm filters through thousands of positions daily to suggest high-matching opportunities tailored to your career trajectory.",
-    color: "bg-orange-50 text-[#F96302]",
-    badge: "98% Match Rate",
-  },
-  {
-    icon: Zap,
-    title: "Automated Application Tracker",
-    description:
-      "Monitor application stages, interview invitations, and status updates seamlessly in one unified dashboard.",
-    color: "bg-emerald-50 text-emerald-600",
-    badge: "Real-time Alerts",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Verified Employer Talent Pool",
-    description:
-      "Connect directly with vetted tech companies and hiring managers without dealing with recruiter spam or phantom job postings.",
-    color: "bg-slate-100 text-slate-800",
-    badge: "100% Vetted",
-  },
-];
+const appleEase = [0.16, 1, 0.3, 1] as const;
 
 export default function AIFeatures() {
   return (
-    <section className="py-20 bg-white">
-      <div className="mx-auto max-w-[1420px] px-4 sm:px-6 lg:px-10">
+    <motion.section
+      initial={{ opacity: 0, y: -25 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8, ease: appleEase }}
+      className="py-10 sm:py-14 bg-transparent"
+    >
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-bold text-[#F96302] ring-1 ring-orange-100">
-            <Sparkles size={15} />
-            <span>AESCION Intelligence</span>
-          </div>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
-            Powered by Next-Gen AI Technology
-          </h2>
-          <p className="mt-4 text-base sm:text-lg text-slate-600">
-            Say goodbye to endless job boards and black-hole applications. AESCION leverages AI models to streamline your career growth.
-          </p>
-        </div>
-
-        {/* Feature Grid */}
-        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.title}
-                className="group relative rounded-3xl border border-slate-200/80 bg-white p-7 transition duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-2xl hover:shadow-indigo-100/50"
-              >
-                <div className="flex items-center justify-between">
-                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${item.color}`}>
-                    <Icon size={28} />
-                  </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">
-                    {item.badge}
-                  </span>
-                </div>
-
-                <h3 className="mt-6 text-xl font-bold text-slate-900 group-hover:text-[#2B26D9] transition">
-                  {item.title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {item.description}
-                </p>
+        <div className="grid gap-5 md:grid-cols-2">
+          
+          {/* Candidate Card */}
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.05, ease: appleEase }}
+            className="rounded-xl border border-blue-100 bg-[#EEF0FE]/40 p-6 sm:p-8 flex flex-col justify-between shadow-xs hover:border-blue-300 transition-all"
+          >
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0067b8] mb-2.5">
+                <FileText size={14} />
+                <span>For Job Seekers</span>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Interactive Banner Box */}
-        <div className="mt-16 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="max-w-2xl text-center lg:text-left">
-              <span className="inline-flex items-center gap-2 rounded-lg bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300">
-                <FileCheck2 size={15} />
-                Try Free AI Resume Audit
-              </span>
-              <h3 className="mt-3 text-2xl sm:text-3xl font-extrabold text-white">
-                Get Your Free Resume AI Score in 30 Seconds
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                Optimize Your Resume for Direct ATS Matching
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-slate-300">
-                Find out how ATS-friendly your resume is and get customized recommendations to land 3x more interviews.
+              <p className="mt-2 text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
+                Check your resume's parsing score, identify skill gaps, and apply directly to hiring managers with transparent compensation.
               </p>
+
+              <div className="mt-5 flex flex-wrap gap-3 text-xs text-slate-700 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 size={13} className="text-emerald-600" /> Free ATS Scanner
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 size={13} className="text-emerald-600" /> Direct Recruiter Line
+                </span>
+              </div>
             </div>
-            <a
-              href="/resume-builder"
-              className="shrink-0 rounded-2xl bg-white px-8 py-4 text-base font-bold text-slate-900 shadow-xl transition hover:bg-slate-100 hover:scale-105 active:scale-100"
-            >
-              Analyze My Resume Now
-            </a>
-          </div>
+
+            <div className="mt-8 pt-4 border-t border-blue-100/90">
+              <Link
+                to="/resume-builder"
+                className="inline-flex items-center gap-1.5 rounded-[4px] bg-[#0067b8] px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-[#005a9e] transition-colors shadow-2xs"
+              >
+                <span>Build & Scan Resume</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* Employer Card */}
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.12, ease: appleEase }}
+            className="rounded-xl border border-slate-800 bg-[#0F172A] text-white p-6 sm:p-8 flex flex-col justify-between shadow-xs hover:border-slate-700 transition-all"
+          >
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F96302] mb-2.5">
+                <Building2 size={14} />
+                <span>For Employers & Recruiters</span>
+              </div>
+              <h3 className="text-xl font-bold text-white tracking-tight leading-snug">
+                Hire Verified Talent with Zero Intermediary Fees
+              </h3>
+              <p className="mt-2 text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+                Post openings directly to verified professionals. Enjoy automated candidate ranking, applicant tracking, and direct interview scheduling.
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-3 text-xs text-slate-300 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 size={13} className="text-emerald-400" /> Verified Candidates
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 size={13} className="text-emerald-400" /> 0% Placement Cuts
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-slate-800">
+              <Link
+                to="/company/register"
+                className="inline-flex items-center gap-1.5 rounded-[4px] bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors shadow-2xs"
+              >
+                <span>Post a Job Opening</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </motion.div>
+
         </div>
 
       </div>
-    </section>
+    </motion.section>
   );
 }

@@ -1,64 +1,87 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-  color: #111827;
-  background: #fff;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  background: #fff;
-}
-
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-.hero-title {
-  letter-spacing: -0.04em;
-  line-height: 1.04;
-}
-
-.gradient-text {
-  background: linear-gradient(90deg, #3B28EC 0%, #6335F3 45%, #F25C05 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.hero-grid {
-  background-image:
-    radial-gradient(circle at 82% 15%, rgba(59, 40, 236, 0.07), transparent 22rem),
-    radial-gradient(circle at 18% 85%, rgba(242, 92, 5, 0.05), transparent 22rem);
-}
-
-.image-frame {
-  clip-path: polygon(7% 0, 100% 0, 100% 93%, 93% 100%, 0 100%, 0 7%);
-}
-
-@media (max-width: 767px) {
-  .hero-title {
-    letter-spacing: -0.03em;
+@layer base {
+  :root {
+    --font-microsoft: "Segoe UI", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", Arial, sans-serif;
+    --color-brand-blue: #2B26D9;
+    --color-brand-blue-hover: #1E1AB8;
+    --color-brand-orange: #F96302;
+    --color-brand-orange-hover: #D85300;
   }
 
-  .image-frame {
-    clip-path: polygon(4% 0, 100% 0, 100% 96%, 96% 100%, 0 100%, 0 4%);
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-microsoft);
+    color: #1e293b;
+    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: var(--font-microsoft);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-microsoft);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+/* Microsoft-style Link Underline Micro-interaction */
+.nav-link-hover {
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.nav-link-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: #2B26D9;
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link-hover:hover::after {
+  width: 100%;
+}
+
+/* Microsoft-Style Card Focus & Hover Elevation */
+.ms-card-interactive {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.ms-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border-color: #2B26D9;
+}
+
+/* Clean Input Field */
+.ms-input {
+  font-family: var(--font-microsoft);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ms-input:focus {
+  border-color: #2B26D9;
+  box-shadow: 0 0 0 1px #2B26D9;
+  outline: none;
 }

@@ -1,60 +1,73 @@
-import { BriefcaseBusiness, FileText, Search, UsersRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
-const cards = [
-  {
-    title: "Smart Job Search",
-    description: "Find jobs that match your skills and interests.",
-    icon: Search,
-    tone: "bg-violet-50 text-violet-600",
-  },
-  {
-    title: "AI Resume Builder",
-    description: "Create a professional resume that gets noticed.",
-    icon: FileText,
-    tone: "bg-orange-50 text-orange-500",
-  },
-  {
-    title: "Track Applications",
-    description: "Monitor your applications and get real-time updates.",
-    icon: BriefcaseBusiness,
-    tone: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    title: "Connect & Grow",
-    description: "Build your network and grow your career.",
-    icon: UsersRound,
-    tone: "bg-blue-50 text-blue-600",
-  },
+const categories = [
+  { title: "Technology & Engineering", count: "4,250+ Openings", query: "Technology" },
+  { title: "Finance & Banking", count: "2,610+ Openings", query: "Finance" },
+  { title: "Healthcare & Clinical", count: "1,840+ Openings", query: "Healthcare" },
+  { title: "Sales & Marketing", count: "3,180+ Openings", query: "Sales" },
+  { title: "Product & UI/UX Design", count: "1,490+ Openings", query: "Design" },
+  { title: "Operations & HR", count: "1,920+ Openings", query: "Operations" },
+  { title: "Hardware Systems", count: "1,180+ Openings", query: "Engineering" },
+  { title: "Education & EdTech", count: "930+ Openings", query: "Education" },
 ];
 
+const appleEase = [0.16, 1, 0.3, 1] as const;
+
 export default function OpportunityCards() {
+  const navigate = useNavigate();
+
   return (
-    <section className="mx-auto max-w-[1420px] px-6 py-16 lg:px-10 lg:py-20">
-      <div className="text-center">
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-          Explore Opportunities
-        </h2>
-        <p className="mt-3 text-base text-slate-500 sm:text-lg">
-          Search jobs, build your profile, and connect with top employers.
-        </p>
+    <motion.section
+      initial={{ opacity: 0, y: -25 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8, ease: appleEase }}
+      className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8 py-10 sm:py-12"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-200">
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+            Popular Job Categories
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Explore verified career openings across high-growth industries.
+          </p>
+        </div>
+
+        <button
+          onClick={() => navigate("/explore-jobs")}
+          className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#0067b8] hover:text-[#004f8c] transition-colors cursor-pointer"
+        >
+          <span>View all</span>
+          <ArrowRight size={14} />
+        </button>
       </div>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map(({ title, description, icon: Icon, tone }) => (
-          <article
+      {/* Grid with staggered card drop-down */}
+      <div className="mt-4 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        {categories.map(({ title, count, query }, idx) => (
+          <motion.div
             key={title}
-            className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:shadow-soft"
+            initial={{ opacity: 0, y: -15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: idx * 0.05, ease: appleEase }}
+            onClick={() => navigate(`/explore-jobs?q=${encodeURIComponent(query)}`)}
+            className="ms-card-interactive group flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-2xs cursor-pointer hover:border-[#0067b8] transition-all"
           >
-            <div className={`mb-5 flex h-16 w-16 items-center justify-center rounded-2xl ${tone}`}>
-              <Icon size={29} />
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#0067b8] transition-colors truncate">
+                {title}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">{count}</p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-            <p className="mt-2 text-[15px] leading-7 text-slate-500">
-              {description}
-            </p>
-          </article>
+            <ArrowRight size={14} className="text-slate-300 group-hover:text-[#0067b8] group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+          </motion.div>
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 }

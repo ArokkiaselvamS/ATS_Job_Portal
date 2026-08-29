@@ -1,67 +1,75 @@
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Users, Sparkles, CheckCircle2, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { Users, ShieldCheck, Zap } from "lucide-react";
 
 export default function Employers() {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between">
       <div>
         <Navbar />
 
-        <main className="mx-auto max-w-[1420px] px-4 sm:px-6 lg:px-10 py-12">
-          {/* Hero for Employers */}
-          <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 sm:p-14 text-white shadow-2xl">
+        <main className="mx-auto max-w-[1420px] px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          {/* Hero Banner for Employers (8px radius, clean 1px border) */}
+          <div className="rounded-[8px] bg-[#0F172A] p-6 sm:p-10 text-white shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/20 px-4 py-1.5 text-xs font-bold text-orange-300">
-                <Sparkles size={14} />
-                AESCION Employer Solutions
+              <span className="inline-flex items-center gap-1.5 rounded-[4px] bg-[#FFF7F2] px-2.5 py-0.5 text-xs font-semibold text-[#F96302]">
+                AESCION Enterprise Solutions
               </span>
-              <h1 className="mt-4 text-3xl font-black sm:text-5xl leading-tight">
-                Hire Top 1% Tech Talent Powered by AI Matching
+              <h1 className="mt-3 text-2xl font-bold sm:text-4xl leading-tight text-white">
+                Hire Verified Industry Talent Directly
               </h1>
-              <p className="mt-4 text-base sm:text-lg text-slate-300">
-                Post jobs, score candidates instantly, and cut hiring cycles by up to 60% with AESCION intelligent talent matching.
+              <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                Post job openings, screen candidate profiles with verified credentials, and accelerate hiring across Technology, Finance, Healthcare, Sales, and Operations.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <button className="rounded-xl bg-gradient-to-r from-[#2B26D9] to-[#F96302] px-7 py-3.5 text-sm font-bold text-white shadow-lg hover:opacity-95">
-                  Post a Job Opening Now
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                <button
+                  onClick={() => navigate("/company/register")}
+                  className="rounded-[4px] bg-[#2B26D9] px-4 py-2 text-sm font-medium text-white hover:bg-[#221DB3] transition-colors"
+                >
+                  Post a Job Opening
                 </button>
-                <button className="rounded-xl border border-slate-700 bg-slate-800/80 px-6 py-3.5 text-sm font-bold text-white hover:bg-slate-800">
-                  Schedule Demo
+                <button
+                  onClick={() => navigate("/company-admin/login")}
+                  className="rounded-[4px] border border-slate-700 bg-slate-800/80 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                >
+                  Employer Portal Login
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Employer Benefits */}
-          <div className="mt-16 grid gap-6 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-[#2B26D9]">
-                <Zap size={24} />
+          {/* Employer Benefits Grid (6px radius cards) */}
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-[6px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-indigo-50 text-[#2B26D9]">
+                <Zap size={18} />
               </div>
-              <h3 className="mt-4 text-lg font-bold text-slate-900">Instant AI Ranking</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-5">
-                Automatically rank applicants based on skill stack, experience, and verified project work.
+              <h3 className="mt-3 text-sm font-bold text-slate-900">Precision Screening</h3>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed font-normal">
+                Automatically screen applicants based on verified skill sets, domain experience, and ATS resume benchmarks.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F96302]">
-                <ShieldCheck size={24} />
+            <div className="rounded-[6px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-orange-50 text-[#F96302]">
+                <ShieldCheck size={18} />
               </div>
-              <h3 className="mt-4 text-lg font-bold text-slate-900">Pre-Vetted Candidates</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-5">
-                Every candidate profile comes with verified credentials and skill assessment badges.
+              <h3 className="mt-3 text-sm font-bold text-slate-900">Pre-Vetted Candidates</h3>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed font-normal">
+                Candidate profiles feature validated skills, transparent salary expectations, and direct communication channels.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Users size={24} />
+            <div className="rounded-[6px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-emerald-50 text-emerald-600">
+                <Users size={18} />
               </div>
-              <h3 className="mt-4 text-lg font-bold text-slate-900">Direct Messaging</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-5">
-                Connect directly with qualified job seekers through integrated scheduling and chat.
+              <h3 className="mt-3 text-sm font-bold text-slate-900">Direct Candidate Engagement</h3>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed font-normal">
+                Connect directly with qualified applicants with zero intermediary delays and live application tracking.
               </p>
             </div>
           </div>

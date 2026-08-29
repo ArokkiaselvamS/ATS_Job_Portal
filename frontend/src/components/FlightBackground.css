@@ -1,0 +1,367 @@
+/* FlightBackground.css */
+.flight-bg-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--flight-bg-opacity, 0.18);
+  transition: opacity 0.5s ease;
+  background: radial-gradient(circle at 60% 45%, #0d1b38 0%, #080f24 50%, #030712 100%);
+}
+
+.flight-bg-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sceneFloat 24s ease-in-out infinite alternate;
+}
+
+/* Cosmic Twinkling Stars */
+.flight-stars-layer {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 140px 80px, #38bdf8, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 280px 190px, #ffedd5, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 450px 70px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 620px 290px, #93c5fd, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 780px 120px, #fdba74, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 910px 420px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 1050px 210px, #7dd3fc, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 1200px 380px, #ffffff, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 600px 600px;
+  animation: starsTwinkle 10s ease-in-out infinite alternate;
+}
+
+/* Central Globe System */
+.flight-globe-container {
+  position: relative;
+  width: min(85vw, 680px);
+  height: min(85vw, 680px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Globe Sphere Graphic */
+.flight-globe-sphere {
+  position: relative;
+  width: 44%;
+  height: 44%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1e3a8a 0%, #0f172a 75%, #020617 100%);
+  box-shadow: 
+    inset -25px -25px 50px rgba(2, 6, 23, 0.9),
+    inset 15px 15px 35px rgba(56, 189, 248, 0.4),
+    0 0 60px rgba(14, 165, 233, 0.35),
+    0 0 120px rgba(59, 130, 246, 0.2);
+  overflow: hidden;
+  animation: globePulse 8s ease-in-out infinite alternate;
+}
+
+/* Rotating/Shifting World Grid */
+.globe-grid {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(56, 189, 248, 0.15) 19px, rgba(56, 189, 248, 0.15) 20px),
+    repeating-linear-gradient(90deg, transparent, transparent 18px, rgba(56, 189, 248, 0.15) 19px, rgba(56, 189, 248, 0.15) 20px);
+  opacity: 0.65;
+  animation: gridRotate 36s linear infinite;
+}
+
+.globe-atmosphere {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+}
+
+/* Illuminated City Lights on Globe */
+.globe-light-points {
+  position: absolute;
+  inset: 0;
+}
+
+.light-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fde047;
+  box-shadow: 0 0 8px #f59e0b, 0 0 14px #ea580c;
+  animation: cityBlink 3s ease-in-out infinite alternate;
+}
+
+.dot-1 { top: 38%; left: 32%; animation-delay: 0.2s; }
+.dot-2 { top: 46%; left: 54%; animation-delay: 1.1s; }
+.dot-3 { top: 30%; left: 62%; animation-delay: 0.7s; }
+.dot-4 { top: 62%; left: 40%; animation-delay: 1.8s; }
+.dot-5 { top: 52%; left: 24%; animation-delay: 2.3s; }
+
+/* SVG Orbits */
+.flight-orbit-svg {
+  position: absolute;
+  width: 130%;
+  height: 130%;
+  overflow: visible;
+}
+
+.orbit-path {
+  fill: none;
+  stroke-width: 1.6;
+}
+
+.orbit-path-cyan {
+  stroke: url(#orbitCyanGlow);
+  stroke-dasharray: 8 6;
+  filter: url(#glowBlur);
+  animation: dashShift 18s linear infinite;
+}
+
+.orbit-path-orange {
+  stroke: url(#orbitOrangeGlow);
+  stroke-width: 2.2;
+  filter: url(#glowBlur);
+}
+
+.orbit-path-subtle {
+  stroke: rgba(147, 197, 253, 0.25);
+  stroke-dasharray: 4 8;
+}
+
+/* High Speed Orbit Light Trail Beams */
+.flight-trail-beam {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  filter: url(#glowBlur);
+}
+
+.beam-orange {
+  stroke: #ff7a00;
+  stroke-dasharray: 90 450;
+  animation: beamTravelOrange 6s linear infinite;
+}
+
+.beam-cyan {
+  stroke: #00f0ff;
+  stroke-dasharray: 110 500;
+  animation: beamTravelCyan 8s linear infinite;
+}
+
+/* Main Airplane Flight Track Animation */
+.airplane-flight-track {
+  position: absolute;
+  width: 115%;
+  height: 115%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.airplane-motion-box {
+  position: absolute;
+  width: 130px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Complex orbital flight path animation */
+  animation: airplaneOrbitMotion 14s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+}
+
+.airplane-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.6)) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+}
+
+/* Glowing Engine Contrail Trails */
+.airplane-contrail-orange {
+  position: absolute;
+  top: 52%;
+  right: 68%;
+  width: 160px;
+  height: 4px;
+  background: linear-gradient(to left, #ff7a00 0%, #f97316 40%, rgba(249, 115, 22, 0) 100%);
+  border-radius: 4px;
+  filter: blur(1.5px);
+  transform-origin: right center;
+  transform: rotate(-5deg);
+  opacity: 0.9;
+  animation: contrailFlicker 0.4s ease-in-out infinite alternate;
+}
+
+.airplane-contrail-cyan {
+  position: absolute;
+  top: 48%;
+  right: 66%;
+  width: 210px;
+  height: 3px;
+  background: linear-gradient(to left, #38bdf8 0%, #0284c7 50%, rgba(2, 132, 199, 0) 100%);
+  border-radius: 4px;
+  filter: blur(1px);
+  transform-origin: right center;
+  transform: rotate(-10deg);
+  opacity: 0.8;
+  animation: contrailFlicker 0.6s ease-in-out infinite alternate-reverse;
+}
+
+.airplane-engine-flare {
+  position: absolute;
+  top: 52%;
+  right: 66%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px #ff7a00, 0 0 24px #38bdf8;
+  animation: engineFlare 0.8s ease-in-out infinite alternate;
+}
+
+/* Secondary Smaller Flight Path */
+.airplane-flight-track-secondary {
+  position: absolute;
+  width: 85%;
+  height: 85%;
+}
+
+.airplane-motion-box-small {
+  position: absolute;
+  width: 48px;
+  height: 30px;
+  animation: airplaneOrbitSecondary 20s linear infinite;
+}
+
+.small-flight-contrail {
+  position: absolute;
+  top: 48%;
+  right: 65%;
+  width: 90px;
+  height: 2px;
+  background: linear-gradient(to left, #38bdf8 0%, rgba(56, 189, 248, 0) 100%);
+  border-radius: 2px;
+}
+
+/* Keyframe Animations */
+@keyframes sceneFloat {
+  0% { transform: translateY(-8px) scale(1); }
+  50% { transform: translateY(10px) scale(1.02); }
+  100% { transform: translateY(-8px) scale(1); }
+}
+
+@keyframes starsTwinkle {
+  0% { opacity: 0.4; }
+  100% { opacity: 0.9; }
+}
+
+@keyframes globePulse {
+  0% { transform: scale(1); box-shadow: inset -25px -25px 50px rgba(2, 6, 23, 0.9), inset 15px 15px 35px rgba(56, 189, 248, 0.4), 0 0 60px rgba(14, 165, 233, 0.35); }
+  100% { transform: scale(1.03); box-shadow: inset -25px -25px 50px rgba(2, 6, 23, 0.9), inset 18px 18px 45px rgba(56, 189, 248, 0.6), 0 0 85px rgba(14, 165, 233, 0.55); }
+}
+
+@keyframes gridRotate {
+  0% { transform: rotate(0deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1.1); }
+}
+
+@keyframes cityBlink {
+  0% { opacity: 0.3; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.3); }
+}
+
+@keyframes dashShift {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -120; }
+}
+
+@keyframes beamTravelOrange {
+  0% { stroke-dashoffset: 540; }
+  100% { stroke-dashoffset: -540; }
+}
+
+@keyframes beamTravelCyan {
+  0% { stroke-dashoffset: -610; }
+  100% { stroke-dashoffset: 610; }
+}
+
+@keyframes contrailFlicker {
+  0% { opacity: 0.7; transform: rotate(-5deg) scaleX(0.92); }
+  100% { opacity: 1; transform: rotate(-5deg) scaleX(1.08); }
+}
+
+@keyframes engineFlare {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+/* Primary Flight Orbital Flight Path Simulation */
+@keyframes airplaneOrbitMotion {
+  0% {
+    transform: translate(-190px, 90px) rotate(-14deg) scale(0.9);
+  }
+  25% {
+    transform: translate(-40px, -65px) rotate(8deg) scale(1.02);
+  }
+  50% {
+    transform: translate(140px, -110px) rotate(22deg) scale(1.12);
+  }
+  75% {
+    transform: translate(195px, 35px) rotate(-4deg) scale(1.05);
+  }
+  100% {
+    transform: translate(-190px, 90px) rotate(-14deg) scale(0.9);
+  }
+}
+
+/* Secondary High-Altitude Background Plane */
+@keyframes airplaneOrbitSecondary {
+  0% {
+    transform: translate(240px, -140px) rotate(-35deg) scale(0.7);
+    opacity: 0.2;
+  }
+  40% {
+    transform: translate(-60px, 80px) rotate(-20deg) scale(0.85);
+    opacity: 0.6;
+  }
+  80% {
+    transform: translate(-230px, 160px) rotate(-15deg) scale(0.65);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-280px, 200px) rotate(-15deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .flight-globe-container {
+    width: 95vw;
+    height: 95vw;
+  }
+  .airplane-motion-box {
+    width: 95px;
+    height: 60px;
+  }
+  @keyframes airplaneOrbitMotion {
+    0% { transform: translate(-110px, 50px) rotate(-14deg) scale(0.85); }
+    25% { transform: translate(-20px, -40px) rotate(8deg) scale(0.95); }
+    50% { transform: translate(80px, -65px) rotate(20deg) scale(1.05); }
+    75% { transform: translate(110px, 20px) rotate(-4deg) scale(0.98); }
+    100% { transform: translate(-110px, 50px) rotate(-14deg) scale(0.85); }
+  }
+}
